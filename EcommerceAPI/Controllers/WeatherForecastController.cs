@@ -1,32 +1,31 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
-namespace EcommerceAPI.Controllers
+namespace EcommerceAPI.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class WeatherForecastController : ControllerBase
 {
-    [Route("[controller]")]
-    public class WeatherForecastController : Controller
+    private static readonly string[] Summaries = new[]
     {
-        private readonly ILogger<WeatherForecastController> _logger;
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    };
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
-
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View("Error!");
-        }
+    [HttpGet]
+    public IEnumerable<WeatherForecast> Get()
+    {
+        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        (
+            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            Random.Shared.Next(-20, 55),
+            Summaries[Random.Shared.Next(Summaries.Length)]
+        ))
+        .ToArray();
     }
+}
+
+// WeatherForecast record for the API response
+public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+{
+    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
