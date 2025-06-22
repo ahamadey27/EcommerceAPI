@@ -1,0 +1,819 @@
+Architecting a Full-Stack E-Commerce Platform: A Comprehensive Guide to ASP.NET Core, Stripe, and Azure DeploymentIntroductionThis report provides an exhaustive, step-by-step guide to architecting and building a modern, full-featured e-commerce API. The technology stack selected for this endeavor—ASP.NET Core, C#, Entity Framework Core, JSON Web Tokens (JWT) for authentication, and Stripe for payment processing—represents a powerful and widely adopted combination for developing robust, scalable web applications. The final application will be deployed to Microsoft Azure, leveraging its free-tier services to create a cost-effective yet powerful portfolio project.The architectural approach emphasizes a clean, multi-layered design. This is not merely a simple CRUD (Create, Read, Update, Delete) application; it is a logic-heavy system with a complex data model designed to handle products, user-specific shopping carts, secure authentication, role-based authorization, and real-world transactional processes. By following this guide, developers will construct a portfolio piece that showcases a deep understanding of professional software engineering principles, from initial database design and secure API development to third-party service integration and cloud deployment.The journey is structured into five distinct phases. Phase 1 establishes the project's foundation, focusing on a meticulously designed data model using Entity Framework Core's Code-First approach. Phase 2 constructs a secure authentication and authorization layer using ASP.NET Core Identity and JWTs. Phase 3 builds the core API endpoints for product, catalog, and shopping cart management. Phase 4 integrates the Stripe payment gateway, covering the entire checkout and order fulfillment lifecycle via webhooks. Finally, Phase 5 details the deployment to Azure's free tier and the creation of a minimalist frontend using Razor Pages to interact with the live API. Each phase is designed to build upon the last, resulting in a cohesive and comprehensive application.Phase 1: Foundation and Data ModelingThe foundation of any complex application is its data model. In this initial phase, the focus is on establishing a clean, scalable project structure and a robust database schema that can accurately represent the entities and relationships of an e-commerce domain. This will be achieved using the Code-First approach with Entity Framework (EF) Core, allowing the C# code to be the single source of truth for the database structure.Section 1.1: Initializing the ASP.NET Core Web API ProjectThe first step is to create and configure the ASP.NET Core Web API project in Visual Studio 2022. This initial setup dictates the project's structure and foundational capabilities.Project Creation ProcessA new project will be created using the ASP.NET Core Web API template.1 During the setup wizard, several key configurations are essential:Project Naming: The project will be named ECommerce.Api.Framework: The latest Long-Term Support (LTS) version of.NET (e.g.,.NET 8.0 or newer) should be selected for stability and long-term viability.3API Type: The "Use controllers (uncheck to use minimal APIs)" checkbox must be checked.1 This architectural decision is deliberate. While Minimal APIs are suitable for microservices or simple endpoints, the requirements for a logic-heavy application with an admin panel, complex data models, and distinct functional areas align better with the structured, scalable nature of traditional controllers. Controllers provide a natural separation of concerns, which is a key principle to demonstrate in a professional portfolio project.1API Documentation: The "Enable OpenAPI support" checkbox will be enabled.1 This automatically integrates the Swashbuckle library, providing a Swagger UI for API documentation and interactive testing from the project's inception. This is an indispensable tool for API development and debugging.5Initial Dependency ManagementA complex project requires numerous external libraries managed via NuGet. A consolidated list of all required packages is provided below for reference. For this initial phase, the focus will be on installing the core dependencies for Entity Framework Core.Using the NuGet Package Manager in Visual Studio or the.NET CLI, the following packages will be installed:Microsoft.EntityFrameworkCore.SqlServer: The EF Core database provider for Microsoft SQL Server.6Microsoft.EntityFrameworkCore.Tools: Provides command-line tools for EF Core, primarily for managing database migrations.2Package NameLatest Stable VersionPurposePhase IntroducedMicrosoft.EntityFrameworkCore.SqlServer8.xEF Core provider for connecting to SQL Server.Phase 1Microsoft.EntityFrameworkCore.Tools8.xProvides EF Core commands for migrations (add-migration, update-database).Phase 1Microsoft.AspNetCore.Identity.EntityFrameworkCore8.xProvides EF Core implementation for ASP.NET Core Identity.Phase 2Microsoft.AspNetCore.Authentication.JwtBearer8.xMiddleware for validating JWTs in the request pipeline.Phase 2Stripe.net44.xThe official.NET client library for interacting with the Stripe API.Phase 4This structured setup ensures the project begins with a solid architectural footing, ready for the development of the data model and business logic.Section 1.2: Architecting the E-Commerce Data SchemaWith the project initialized, the next step is to define the C# entity classes, or Plain Old C# Objects (POCOs), that will represent the core concepts of our e-commerce domain. These classes will be translated into database tables by Entity Framework Core.ApplicationUser: To integrate seamlessly with ASP.NET Core's authentication system, a custom user class is created by extending the base IdentityUser class. This allows for the addition of application-specific properties.C#// File: Models/ApplicationUser.cs
+using Microsoft.AspNetCore.Identity;
+
+public class ApplicationUser : IdentityUser
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
+This approach is fundamental for linking custom user data with the built-in Identity framework.7Product: This class represents an item for sale in the store. It includes essential details like name, description, price, and inventory level.9C#// File: Models/Product.cs
+using System.ComponentModel.DataAnnotations.Schema;
+
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    public decimal Price { get; set; }
+    public int StockQuantity { get; set; }
+    public string ImageUrl { get; set; }
+}
+ShoppingCart and CartItem: The shopping cart functionality is modeled with two entities. The ShoppingCart acts as a container that is uniquely associated with a user. The CartItem is a join entity that represents a specific product within a cart, including its quantity.C#// File: Models/ShoppingCart.cs
+public class ShoppingCart
+{
+    public int Id { get; set; }
+    public string UserId { get; set; }
+    public ApplicationUser User { get; set; }
+    public List<CartItem> Items { get; set; } = new();
+}
+
+// File: Models/CartItem.cs
+public class CartItem
+{
+    public int Id { get; set; }
+    public int Quantity { get; set; }
+
+    public int ProductId { get; set; }
+    public Product Product { get; set; }
+
+    public int ShoppingCartId { get; set; }
+    public ShoppingCart ShoppingCart { get; set; }
+}
+This design explicitly models the many-to-many relationship between ShoppingCart and Product, allowing the CartItem to hold additional data like Quantity.11Order and OrderItem: Similar to the shopping cart, a completed order is represented by two entities. The Order contains summary information like the total amount and shipping details. The OrderItem captures the details of each product in the order. A critical design consideration here is to store the price of the product at the time of purchase within the OrderItem. This ensures historical accuracy, as product prices may change over time.C#// File: Models/Order.cs
+using System.ComponentModel.DataAnnotations.Schema;
+
+public class Order
+{
+    public int Id { get; set; }
+    public string UserId { get; set; }
+    public ApplicationUser User { get; set; }
+    public DateTime OrderDate { get; set; }
+
+    public decimal TotalAmount { get; set; }
+    public string ShippingAddress { get; set; }
+    public string OrderStatus { get; set; } // e.g., "Pending", "Shipped", "Delivered"
+    public List<OrderItem> OrderItems { get; set; } = new();
+}
+
+// File: Models/OrderItem.cs
+using System.ComponentModel.DataAnnotations.Schema;
+
+public class OrderItem
+{
+    public int Id { get; set; }
+    public int Quantity { get; set; }
+
+    public decimal Price { get; set; } // Price at the time of purchase
+
+    public int ProductId { get; set; }
+    public Product Product { get; set; }
+
+    public int OrderId { get; set; }
+    public Order Order { get; set; }
+}
+This denormalization of the price into the OrderItem is a fundamental pattern in e-commerce systems that demonstrates a mature understanding of transactional data modeling.10Section 1.3: Configuring Entity Framework Core and the DbContextThe DbContext class is the central component in Entity Framework Core, acting as the bridge between the C# entity models and the database. It is responsible for querying data, tracking changes, and persisting them to the database.Creating the ApplicationDbContextA custom DbContext class, ApplicationDbContext, will be created. A non-obvious but crucial decision is to have this class inherit from IdentityDbContext<ApplicationUser> rather than the standard DbContext.7 This single step seamlessly merges the schema required by ASP.NET Core Identity (for users, roles, claims, etc.) with the application's custom business schema (Products, Orders, etc.) into one unified context. This approach simplifies database management, ensures transactional integrity across both authentication and business domains, and streamlines dependency injection.C#// File: Data/ApplicationDbContext.cs
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using ECommerce.Api.Models; // Assuming models are in this namespace
+
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+{
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<Product> Products { get; set; }
+    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+    public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        // Fluent API configurations will be added here in the next section
+    }
+}
+The DbSet<> properties expose collections of the entities, which EF Core will use to generate the corresponding database tables.2Registering the DbContext and Connection StringThe ApplicationDbContext must be registered with the dependency injection (DI) container in Program.cs. This makes it available to be injected into controllers and services throughout the application.C#// File: Program.cs (partial)
+using Microsoft.EntityFrameworkCore;
+using ECommerce.Api.Data; // Namespace for ApplicationDbContext
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+//... other service registrations
+
+var app = builder.Build();
+//...
+app.Run();
+This code retrieves the database connection string from configuration and registers ApplicationDbContext to use the SQL Server provider.6The connection string itself is stored in appsettings.json for local development. For security, sensitive information like passwords should be moved to User Secrets or another secure configuration provider for production environments.JSON// File: appsettings.json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=ECommerceDb;Trusted_Connection=True;MultipleActiveResultSets=true"
+  },
+  //... other settings
+}
+Section 1.4: Defining Entity Relationships with the Fluent APIWhile EF Core can infer many relationships by convention, explicitly defining them using the Fluent API inside the DbContext's OnModelCreating method provides maximum clarity, control, and removes ambiguity. This is considered a best practice for complex data models.The primary relationships in the e-commerce schema are one-to-many. For example, a User can have many Orders. This is configured by specifying the principal entity (User), the collection navigation property (Orders), the dependent entity (Order), and the reference navigation property (User).17A particularly important aspect of this data model is the handling of the many-to-many relationships between products and carts/orders. While EF Core 5+ introduced support for implicit many-to-many relationships, they are insufficient here. The join tables (CartItem and OrderItem) contain critical "payload" data—Quantity and Price—that cannot be represented by a simple link table. Therefore, the correct pattern is to explicitly define the join entity and configure two one-to-many relationships pointing to it.19 This transforms the conceptual many-to-many relationship into a more powerful and accurate representation of the domain.The following configurations will be added to the OnModelCreating method in ApplicationDbContext.cs:C#// File: Data/ApplicationDbContext.cs (OnModelCreating method)
+protected override void OnModelCreating(ModelBuilder builder)
+{
+    base.OnModelCreating(builder);
+
+    // User -> ShoppingCart (One-to-One)
+    builder.Entity<ApplicationUser>()
+       .HasOne(u => u.ShoppingCart)
+       .WithOne(c => c.User)
+       .HasForeignKey<ShoppingCart>(c => c.UserId);
+
+    // User -> Orders (One-to-Many)
+    builder.Entity<ApplicationUser>()
+       .HasMany(u => u.Orders)
+       .WithOne(o => o.User)
+       .HasForeignKey(o => o.UserId);
+
+    // ShoppingCart -> CartItems (One-to-Many)
+    builder.Entity<ShoppingCart>()
+       .HasMany(c => c.Items)
+       .WithOne(ci => ci.ShoppingCart)
+       .HasForeignKey(ci => ci.ShoppingCartId);
+
+    // Order -> OrderItems (One-to-Many)
+    builder.Entity<Order>()
+       .HasMany(o => o.OrderItems)
+       .WithOne(oi => oi.Order)
+       .HasForeignKey(oi => oi.OrderId);
+
+    // Product -> CartItems (One-to-Many)
+    builder.Entity<Product>()
+       .HasMany<CartItem>() // No navigation property on Product
+       .WithOne(ci => ci.Product)
+       .HasForeignKey(ci => ci.ProductId);
+
+    // Product -> OrderItems (One-to-Many)
+    builder.Entity<Product>()
+       .HasMany<OrderItem>() // No navigation property on Product
+       .WithOne(oi => oi.Product)
+       .HasForeignKey(oi => oi.ProductId);
+}
+Section 1.5: Creating the Database with EF Core MigrationsEF Core Migrations serve as a version control system for the database schema, allowing it to evolve in lockstep with the application's code. This feature is essential for maintaining a consistent state between the data model and the actual database structure.Generating the Initial MigrationWith the DbContext and entities fully defined, the first migration can be created. This is done using the.NET CLI or the Package Manager Console in Visual Studio.PowerShell// Using Package Manager Console
+add-migration InitialCreate
+This command inspects the ApplicationDbContext and compares it to a model snapshot (or an empty state, if this is the first migration). It then generates a C# file in a new Migrations folder. This file contains the code necessary to create the database schema—all the CREATE TABLE, ADD COLUMN, and CREATE FOREIGN KEY statements—that matches the defined entities and relationships.8Applying the MigrationOnce the migration file is generated and reviewed, it can be applied to the database.PowerShell// Using Package Manager Console
+update-database
+This command executes the code in the pending migration files, applying the schema changes to the database specified in the connection string. For this initial run, it will create the ECommerceDb database and all the required tables for both the custom entities and the ASP.NET Core Identity system.2To verify the successful creation of the schema, SQL Server Object Explorer in Visual Studio can be used to connect to the local database instance and inspect the tables, columns, primary keys, and foreign key constraints, ensuring they match the C# model precisely.20 This completes the foundational data layer of the application.Phase 2: Secure Authentication and AuthorizationWith a robust data model and database schema in place, the next critical step is to build the security layer. This phase will implement a modern, stateless authentication system using JSON Web Tokens (JWTs), which is the standard for securing APIs. This system will be backed by the powerful and extensible user management features of ASP.NET Core Identity.Section 2.1: Integrating ASP.NET Core Identity for User ManagementASP.NET Core Identity is a comprehensive framework that provides services for user registration, password hashing, role management, and more. By integrating it with our custom ApplicationUser entity, we leverage its secure and tested functionality for our user persistence layer.Configuring Identity ServicesThe integration is configured in Program.cs. The AddIdentity method registers the necessary services, and it is crucial to specify our custom ApplicationUser class and the standard IdentityRole class. Chaining .AddEntityFrameworkStores<ApplicationDbContext>() instructs Identity to use our existing EF Core context for all database operations, ensuring a unified data access strategy.14C#// File: Program.cs (partial)
+using ECommerce.Api.Data;
+using ECommerce.Api.Models;
+using Microsoft.AspNetCore.Identity;
+
+//... existing service registrations
+
+// Configure ASP.NET Core Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+   .AddEntityFrameworkStores<ApplicationDbContext>()
+   .AddDefaultTokenProviders();
+
+//... other service registrations
+This configuration prepares the application to use Identity's UserManager<ApplicationUser> and RoleManager<IdentityRole> services, which will be injected into our controllers to handle all user-related logic. It is important to recognize that at this stage, we are leveraging Identity for its user management capabilities, not its default authentication scheme (which is cookie-based and stateful). The subsequent sections will replace this default scheme with a stateless JWT implementation.Section 2.2: Implementing JWT-Based Authentication for a Stateless APIA stateless API requires a token-based authentication mechanism, and JWT is the industry standard. A JWT is a self-contained token that can be securely verified by the server without needing to consult a database or session store on every request.Configuration of JWT AuthenticationInstall NuGet Package: The first step is to install the JWT Bearer authentication handler.PowerShell// Using Package Manager Console
+Install-Package Microsoft.AspNetCore.Authentication.JwtBearer
+This package provides the middleware that can validate JWTs sent in the Authorization header.3Configure appsettings.json: Secure and configurable values for the JWT issuer, audience, and the all-important secret key are stored in appsettings.json. The secret key must be sufficiently long and complex and should be managed via a secure mechanism like Azure Key Vault in a production environment.JSON// File: appsettings.json
+"JWT": {
+  "Secret": "A_VERY_LONG_AND_SECURE_SECRET_KEY_GOES_HERE_12345",
+  "Issuer": "https://localhost:7001", // The URL of your API
+  "Audience": "https://localhost:7001"
+}
+Configure Middleware in Program.cs: The authentication services and JWT Bearer middleware must be configured. This involves telling the application to use JWTs as its authentication scheme and providing the parameters for token validation. The middleware will automatically check that the token's issuer, audience, and signing key match the configured values, and that the token has not expired.23C#// File: Program.cs (partial)
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+//... after Identity configuration
+
+// Configure JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>{options.SaveToken = true;options.RequireHttpsMetadata = false;options.TokenValidationParameters = new TokenValidationParameters(){ValidateIssuer = true,ValidateAudience = true,ValidAudience = builder.Configuration,ValidIssuer = builder.Configuration,IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration))};});//... other services
+
+var app = builder.Build();
+
+//...
+
+app.UseAuthentication(); // This middleware must be added
+app.UseAuthorization();  // This middleware must be added
+
+app.MapControllers();
+app.Run();
+```
+The order of `UseAuthentication()` and `UseAuthorization()` in the request pipeline is critical; authentication must occur before authorization.
+Creating the Authentication ControllerA dedicated AuthController is required to handle user registration and login. A common pitfall is to assume that ASP.NET Core Identity's default endpoints (e.g., from MapIdentityApi) will generate JWTs. They do not; they produce opaque tokens intended for stateful, cookie-based scenarios.24 Therefore, a custom login endpoint that manually generates a JWT is essential.C#// File: Controllers/AuthController.cs
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using ECommerce.Api.Models; // Your models namespace
+using ECommerce.Api.DTOs; // Your DTOs namespace
+
+")]
+[ApiController]
+public class AuthController : ControllerBase
+{
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IConfiguration _configuration;
+
+    public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+    {
+        _userManager = userManager;
+        _configuration = configuration;
+    }
+
+    [HttpPost]
+   
+    public async Task<IActionResult> Register( RegisterDto registerDto)
+    {
+        var userExists = await _userManager.FindByNameAsync(registerDto.Username);
+        if (userExists!= null)
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User already exists!" });
+
+        ApplicationUser user = new()
+        {
+            Email = registerDto.Email,
+            SecurityStamp = Guid.NewGuid().ToString(),
+            UserName = registerDto.Username,
+            FirstName = registerDto.FirstName,
+            LastName = registerDto.LastName
+        };
+        var result = await _userManager.CreateAsync(user, registerDto.Password);
+        if (!result.Succeeded)
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+
+        return Ok(new { Status = "Success", Message = "User created successfully!" });
+    }
+
+    [HttpPost]
+   
+    public async Task<IActionResult> Login( LoginDto loginDto)
+    {
+        var user = await _userManager.FindByNameAsync(loginDto.Username);
+        if (user!= null && await _userManager.CheckPasswordAsync(user, loginDto.Password))
+        {
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var authClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            };
+
+            foreach (var userRole in userRoles)
+            {
+                authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+            }
+
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration));
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration,
+                audience: _configuration,
+                expires: DateTime.Now.AddHours(3),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+            );
+
+            return Ok(new
+            {
+                token = new JwtSecurityTokenHandler().WriteToken(token),
+                expiration = token.ValidTo
+            });
+        }
+        return Unauthorized();
+    }
+}
+This controller uses UserManager for the secure logic of user creation and password validation, but then takes over to manually construct and sign a JWT containing the necessary claims (user ID, username, roles), which is then returned to the client.3Section 2.3: Advanced Authorization: Implementing and Seeding User RolesRole-based authorization is a cornerstone of access control. This application will define "Admin" and "User" roles to differentiate permissions. A critical step for making the application usable immediately after deployment is to "seed" the database with these roles and a default administrator account. Without this, there would be no way to access admin-only functionality to perform initial setup, such as adding the first products.Enabling and Seeding RolesEnable Role Management: First, role support must be explicitly added to the Identity configuration in Program.cs.C#// File: Program.cs (partial)
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>() // IdentityRole is specified
+   .AddRoles<IdentityRole>() // This line is crucial
+   .AddEntityFrameworkStores<ApplicationDbContext>()
+   .AddDefaultTokenProviders();
+This call registers the RoleManager<IdentityRole> service, which is used to create and manage roles.26Create a Database Seeder: A seeder class will be created to run on application startup. This class will programmatically ensure the necessary roles and a default admin user exist in the database.C#// File: Data/DbInitializer.cs
+public static class DbInitializer
+{
+    public static async Task SeedRolesAndAdminAsync(IServiceProvider service)
+    {
+        //Seed Roles
+        var userManager = service.GetService<UserManager<ApplicationUser>>();
+        var roleManager = service.GetService<RoleManager<IdentityRole>>();
+        await roleManager.CreateAsync(new IdentityRole("Admin"));
+        await roleManager.CreateAsync(new IdentityRole("User"));
+
+        // creating admin
+        var adminUser = new ApplicationUser
+        {
+            UserName = "admin@example.com",
+            Email = "admin@example.com",
+            FirstName = "Admin",
+            LastName = "User",
+            EmailConfirmed = true,
+            PhoneNumberConfirmed = true
+        };
+        var userInDb = await userManager.FindByEmailAsync(adminUser.Email);
+        if (userInDb == null)
+        {
+            await userManager.CreateAsync(adminUser, "Admin@123");
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+    }
+}
+Run the Seeder: The seeder is invoked from Program.cs after the application is built but before it starts listening for requests.C#// File: Program.cs (partial)
+var app = builder.Build();
+
+// Seed database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await DbInitializer.SeedRolesAndAdminAsync(services);
+}
+
+//... configure pipeline
+app.Run();
+This seeding process solves the initial "chicken-and-egg" problem, making the application self-bootstrapping and ready for immediate use post-deployment.27Section 2.4: Securing Endpoints with [Authorize] and Role-Based PoliciesWith authentication and roles configured, access to controllers and actions can be restricted using authorization attributes.Applying Authorization AttributesThe [Authorize] attribute is a declarative way to protect endpoints. When applied, the middleware pipeline ensures that the request has a valid, authenticated JWT before allowing it to proceed.General Authorization: To require any authenticated user, simply add [Authorize] to a controller or action.Role-Based Authorization: To restrict access to users in specific roles, use the Roles property: . This is perfect for securing the product management endpoints.21 Multiple roles can be specified in a comma-separated list (e.g., ), which grants access if the user belongs to any of the listed roles.26For this application, the ProductsController (to be created in Phase 3) will be decorated with ``, while the ShoppingCartController will use a simple [Authorize], as any logged-in user should be able to manage their own cart. Public-facing endpoints, such as those for viewing products, will use the [AllowAnonymous] attribute to override any controller-level authorization.This combination of ASP.NET Core Identity for user management and a custom JWT implementation for authentication provides a secure, stateless, and flexible security foundation for the e-commerce API.Phase 3: Core E-Commerce API EndpointsWith the data model established and the security framework in place, this phase focuses on constructing the API endpoints that provide the core functionality of the e-commerce platform. This involves creating controllers for administrative product management, public product catalog browsing, and personalized shopping cart interactions.Section 3.1: The Admin Panel: Building a Secure Product Management ControllerThis section details the creation of a full suite of CRUD endpoints for managing the product inventory. These endpoints will be strictly reserved for users with the "Admin" role.Controller and Endpoint ImplementationA new controller, ProductsController, will be created. Following established best practices, it will inherit from ControllerBase and be decorated with [ApiController] and ")].30 To enforce security, the entire controller will be protected by the `` attribute, ensuring only administrators can access its methods.26For a complex application, placing data access logic directly within the controller is not ideal as it tightly couples the API layer with the data layer, making the system harder to test and maintain. A better architectural pattern is to introduce a service or repository layer to abstract data operations.4 For clarity, the initial implementation will inject the ApplicationDbContext directly, with a subsequent discussion on refactoring to a service pattern.C#// File: Controllers/ProductsController.cs
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ECommerce.Api.Data;
+using ECommerce.Api.Models;
+using ECommerce.Api.DTOs;
+
+")]
+[ApiController]
+
+public class ProductsController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+
+    public ProductsController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    // POST: api/products
+    [HttpPost]
+    public async Task<ActionResult<Product>> PostProduct(ProductDto productDto)
+    {
+        var product = new Product
+        {
+            Name = productDto.Name,
+            Description = productDto.Description,
+            Price = productDto.Price,
+            StockQuantity = productDto.StockQuantity,
+            ImageUrl = productDto.ImageUrl
+        };
+
+        _context.Products.Add(product);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+    }
+
+    // GET: api/products/{id}
+    // Note: This admin-only GET is separate from the public one.
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Product>> GetProduct(int id)
+    {
+        var product = await _context.Products.FindAsync(id);
+
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        return product;
+    }
+
+    // PUT: api/products/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutProduct(int id, ProductDto productDto)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        product.Name = productDto.Name;
+        product.Description = productDto.Description;
+        product.Price = productDto.Price;
+        product.StockQuantity = productDto.StockQuantity;
+        product.ImageUrl = productDto.ImageUrl;
+
+        _context.Entry(product).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.Products.Any(e => e.Id == id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return NoContent();
+    }
+
+    // DELETE: api/products/{id}
+   
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        _context.Products.Remove(product);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+}
+The use of a ProductDto for POST and PUT operations is a deliberate security measure to prevent over-posting, where a malicious user could attempt to update fields not intended for modification (like the Id).1Section 3.2: The Public Catalog: Implementing Product Viewing and Search EndpointsTo allow customers to browse the store, public-facing endpoints are required. These endpoints will be added to the ProductsController but will be decorated with the [AllowAnonymous] attribute to override the controller-level authorization.Public Endpoints ImplementationC#// Add to ProductsController.cs
+
+// GET: api/products/public
+[HttpGet("public")]
+[AllowAnonymous]
+public async Task<ActionResult<IEnumerable<Product>>> GetPublicProducts()
+{
+    return await _context.Products.Where(p => p.StockQuantity > 0).ToListAsync();
+}
+
+// GET: api/products/public/{id}
+[HttpGet("public/{id}")]
+[AllowAnonymous]
+public async Task<ActionResult<Product>> GetPublicProduct(int id)
+{
+    var product = await _context.Products.FindAsync(id);
+
+    if (product == null |
+| product.StockQuantity <= 0)
+    {
+        return NotFound();
+    }
+
+    return product;
+}
+
+// GET: api/products/public/search
+[HttpGet("public/search")]
+[AllowAnonymous]
+public async Task<ActionResult<IEnumerable<Product>>> SearchProducts([FromQuery] string searchTerm)
+{
+    if (string.IsNullOrWhiteSpace(searchTerm))
+    {
+        return BadRequest("Search term cannot be empty.");
+    }
+
+    var products = await _context.Products
+       .Where(p => p.Name.Contains(searchTerm) |
+| p.Description.Contains(searchTerm))
+       .Where(p => p.StockQuantity > 0)
+       .ToListAsync();
+
+    return Ok(products);
+}
+A robust search implementation requires careful construction of the underlying database query. The most efficient approach is to build a dynamic IQueryable by conditionally appending LINQ methods like Where() and OrderBy() based on the provided query parameters. The query is only executed against the database when a terminal method like ToListAsync() is called. This ensures that all filtering and sorting logic is translated into a single, optimized SQL query, which is vastly more performant than fetching all data and filtering it in memory.32 The example above provides a basic search; a more advanced implementation would include parameters for sorting, filtering by price range, and pagination.Section 3.3: The Shopping Cart: A Deep Dive into User-Specific Cart ManagementThe shopping cart is a core feature that must be tied to a specific authenticated user. This requires creating endpoints that can identify the current user from their JWT and perform operations on their personal cart.Identifying the Current UserWithin an [Authorize]-d controller action, the User property (of type ClaimsPrincipal) is automatically populated from the validated JWT. The user's unique ID, which was added as a claim during login, can be retrieved using User.FindFirstValue(ClaimTypes.NameIdentifier).34 This ID is the key to linking API requests to specific user data in the database.A common architectural challenge arises when business logic is moved to a service layer, as the User property is not directly available. The standard solution is to inject the IHttpContextAccessor service. This service provides access to the current HttpContext, and thus to the User claims, from anywhere in the application that supports dependency injection. This allows services to be "user-aware" without cluttering their method signatures with a userId parameter.34Shopping Cart Controller ImplementationA new ShoppingCartController will be created, secured with [Authorize] to ensure only logged-in users can access it.C#// File: Controllers/ShoppingCartController.cs
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using ECommerce.Api.Data;
+using ECommerce.Api.Models;
+
+")]
+[ApiController]
+[Authorize]
+public class ShoppingCartController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+
+    public ShoppingCartController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    // GET: api/shoppingcart
+    [HttpGet]
+    public async Task<ActionResult<ShoppingCart>> GetShoppingCart()
+    {
+        var userId = GetUserId();
+        var shoppingCart = await _context.ShoppingCarts
+           .Include(sc => sc.Items)
+           .ThenInclude(i => i.Product)
+           .FirstOrDefaultAsync(sc => sc.UserId == userId);
+
+        if (shoppingCart == null)
+        {
+            // Create a cart if one doesn't exist for the user
+            shoppingCart = new ShoppingCart { UserId = userId };
+            _context.ShoppingCarts.Add(shoppingCart);
+            await _context.SaveChangesAsync();
+        }
+
+        return shoppingCart;
+    }
+
+    // POST: api/shoppingcart/add
+    [HttpPost("add")]
+    public async Task<ActionResult<ShoppingCart>> AddToCart(CartItemDto cartItemDto)
+    {
+        var userId = GetUserId();
+        var shoppingCart = await GetOrCreateCartAsync(userId);
+        var product = await _context.Products.FindAsync(cartItemDto.ProductId);
+
+        if (product == null |
+| product.StockQuantity < cartItemDto.Quantity)
+        {
+            return BadRequest("Product not available or insufficient stock.");
+        }
+
+        var cartItem = shoppingCart.Items.FirstOrDefault(i => i.ProductId == cartItemDto.ProductId);
+
+        if (cartItem!= null)
+        {
+            cartItem.Quantity += cartItemDto.Quantity;
+        }
+        else
+        {
+            cartItem = new CartItem
+            {
+                ProductId = cartItemDto.ProductId,
+                Quantity = cartItemDto.Quantity,
+                ShoppingCartId = shoppingCart.Id
+            };
+            shoppingCart.Items.Add(cartItem);
+        }
+
+        product.StockQuantity -= cartItemDto.Quantity; // Decrease stock
+        await _context.SaveChangesAsync();
+
+        return await GetShoppingCart();
+    }
+
+    // DELETE: api/shoppingcart/remove/{productId}
+   
+    public async Task<ActionResult<ShoppingCart>> RemoveFromCart(int productId)
+    {
+        var userId = GetUserId();
+        var shoppingCart = await _context.ShoppingCarts
+           .Include(sc => sc.Items)
+           .FirstOrDefaultAsync(sc => sc.UserId == userId);
+
+        if (shoppingCart == null)
+        {
+            return NotFound("Shopping cart not found.");
+        }
+
+        var cartItem = shoppingCart.Items.FirstOrDefault(i => i.ProductId == productId);
+
+        if (cartItem == null)
+        {
+            return NotFound("Item not in cart.");
+        }
+
+        var product = await _context.Products.FindAsync(productId);
+        if (product!= null)
+        {
+            product.StockQuantity += cartItem.Quantity; // Return stock
+        }
+
+        _context.CartItems.Remove(cartItem);
+        await _context.SaveChangesAsync();
+
+        return await GetShoppingCart();
+    }
+
+    private async Task<ShoppingCart> GetOrCreateCartAsync(string userId)
+    {
+        var cart = await _context.ShoppingCarts
+           .Include(sc => sc.Items)
+           .FirstOrDefaultAsync(sc => sc.UserId == userId);
+
+        if (cart == null)
+        {
+            cart = new ShoppingCart { UserId = userId };
+            _context.ShoppingCarts.Add(cart);
+            await _context.SaveChangesAsync();
+        }
+        return cart;
+    }
+}
+This controller provides the essential logic for a user to manage their cart, including creating a cart on-the-fly if one doesn't exist, adding items (and checking stock), and removing them.11Phase 4: Payment Processing and Order FulfillmentThis phase integrates a critical third-party service, Stripe, to handle payments. The implementation will cover the entire flow, from initiating a secure payment session based on the user's shopping cart to processing the order confirmation received from Stripe via a webhook.Section 4.1: Integrating the Stripe Payment GatewayThe first step is to configure the application to communicate with the Stripe API using the official.NET client library.Setup and ConfigurationInstall Stripe.net Package: Add the Stripe client library to the project via NuGet.PowerShell// Using Package Manager Console
+Install-Package Stripe.net
+This package provides strongly-typed classes and methods for all Stripe API resources.38Configure API Keys: A Stripe account is required to obtain a Publishable Key (for client-side use) and a Secret Key (for server-side API calls). These keys must be stored securely. For local development, they can be placed in appsettings.json, but for production, they must be managed through a secure store like Azure Key Vault or environment variables.JSON// File: appsettings.json
+"Stripe": {
+  "PublishableKey": "pk_test_YOUR_PUBLISHABLE_KEY",
+  "SecretKey": "sk_test_YOUR_SECRET_KEY",
+  "WebhookSecret": "whsec_YOUR_WEBHOOK_SECRET"
+}
+Initialize Stripe Client: In Program.cs, the static StripeConfiguration.ApiKey property must be set with the secret key. This authenticates all subsequent server-side requests to the Stripe API.C#// File: Program.cs (partial)
+using Stripe;
+
+var builder = WebApplication.CreateBuilder(args);
+
+//...
+
+// Configure Stripe
+StripeConfiguration.ApiKey = builder.Configuration;
+
+//...
+
+var app = builder.Build();
+
+//...
+Section 4.2: Implementing the Stripe Checkout FlowStripe Checkout provides a prebuilt, secure, and customizable payment page hosted by Stripe. The API's role is to create a "Checkout Session" containing all the necessary details of the transaction and then redirect the user to it.Checkout Controller ImplementationA CheckoutController will be created to handle this process. It will be secured with [Authorize] to ensure only authenticated users can initiate a payment.C#// File: Controllers/CheckoutController.cs
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Stripe.Checkout;
+using System.Security.Claims;
+using ECommerce.Api.Data;
+
+")]
+[ApiController]
+[Authorize]
+public class CheckoutController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IConfiguration _configuration;
+
+    public CheckoutController(ApplicationDbContext context, IConfiguration configuration)
+    {
+        _context = context;
+        _configuration = configuration;
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> CreateCheckoutSession()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var cart = await _context.ShoppingCarts
+           .Include(c => c.Items)
+           .ThenInclude(i => i.Product)
+           .FirstOrDefaultAsync(c => c.UserId == userId);
+
+        if (cart == null ||!cart.Items.Any())
+        {
+            return BadRequest("Shopping cart is empty.");
+        }
+
+        var lineItems = cart.Items.Select(item => new SessionLineItemOptions
+        {
+            PriceData = new SessionLineItemPriceDataOptions
+            {
+                Currency = "usd",
+                ProductData = new SessionLineItemPriceDataProductDataOptions
+                {
+                    Name = item.Product.Name,
+                },
+                UnitAmount = (long)(item.Product.Price * 100), // Price in cents
+            },
+            Quantity = item.Quantity,
+        }).ToList();
+
+        var options = new SessionCreateOptions
+        {
+            PaymentMethodTypes = new List<string> { "card" },
+            LineItems = lineItems,
+            Mode = "payment",
+            SuccessUrl = _configuration, // e.g., "http://localhost:5002/success"
+            CancelUrl = _configuration,   // e.g., "http://localhost:5002/cancel"
+            ClientReferenceId = userId // CRITICAL: Link Stripe session to our user
+        };
+
+        var service = new SessionService();
+        Session session = await service.CreateAsync(options);
+
+        return Ok(new { sessionId = session.Id, url = session.Url });
+    }
+}
+The ClientReferenceId is the most crucial piece of metadata in this process. By setting it to our application's internal UserId, we create a reliable link between the Stripe transaction and our system's data. When Stripe later sends a webhook notification, this ID will be present, allowing us to identify which user's order has been paid for.40 The SuccessUrl and CancelUrl are endpoints on the frontend application where the user will be sent after completing or canceling the payment on the Stripe page.38Section 4.3: Order Fulfillment via Stripe Webhooks (checkout.session.completed)After a user successfully pays, Stripe sends an asynchronous notification, a webhook, to a pre-configured endpoint in our API. This event-driven approach is the standard and most reliable way to handle order fulfillment.Webhook SecurityAn unprotected webhook endpoint is a severe security vulnerability. An attacker could send fake requests to this endpoint to grant themselves free products. To prevent this, every webhook request from Stripe is signed with a secret key. The API must verify this signature on every incoming webhook event to ensure its authenticity. Blindly trusting the payload without signature verification is a critical security flaw.Webhook Handler ImplementationA new WebhookController is created with a single, public endpoint.C#// File: Controllers/WebhookController.cs
+using Microsoft.AspNetCore.Mvc;
+using Stripe;
+using Stripe.Checkout;
+using ECommerce.Api.Data;
+using ECommerce.Api.Models;
+
+")]
+[ApiController]
+public class WebhookController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IConfiguration _configuration;
+
+    public WebhookController(ApplicationDbContext context, IConfiguration configuration)
+    {
+        _context = context;
+        _configuration = configuration;
+    }
+
+    [HttpPost("stripe")]
+    public async Task<IActionResult> StripeWebhook()
+    {
+        var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+        var stripeEvent = EventUtility.ConstructEvent(json,
+            Request.Headers,
+            _configuration);
+
+        if (stripeEvent.Type == Events.CheckoutSessionCompleted)
+        {
+            var session = stripeEvent.Data.Object as Session;
+            
+            // Fulfill the order
+            await FulfillOrder(session);
+        }
+
+        return Ok();
+    }
+
+    private async Task FulfillOrder(Session session)
+    {
+        var userId = session.ClientReferenceId;
+        if (string.IsNullOrEmpty(userId))
+        {
+            // Log error: No ClientReferenceId found
+            return;
+        }
+
+        var cart = await _context.ShoppingCarts
+           .Include(c => c.Items)
+           .ThenInclude(i => i.Product)
+           .FirstOrDefaultAsync(c => c.UserId == userId);
+
+        if (cart!= null && cart.Items.Any())
+        {
+            var order = new Order
+            {
+                UserId = userId,
+                OrderDate = DateTime.UtcNow,
+                TotalAmount = cart.Items.Sum(i => i.Product.Price * i.Quantity),
+                ShippingAddress = "User's default address", // Placeholder
+                OrderStatus = "Paid",
+                OrderItems = cart.Items.Select(ci => new OrderItem
+                {
+                    ProductId = ci.ProductId,
+                    Quantity = ci.Quantity,
+                    Price = ci.Product.Price // Price at time of purchase
+                }).ToList()
+            };
+
+            _context.Orders.Add(order);
+            
+            // Clear the shopping cart
+            _context.CartItems.RemoveRange(cart.Items);
+            
+            await _context.SaveChangesAsync();
+        }
+    }
+}
+The handler first reads the raw request body and the Stripe-Signature header. It uses EventUtility.ConstructEvent with the webhook signing secret to validate the request's authenticity. If the signature is invalid, this method will throw an exception, preventing further processing.42If the event type is checkout.session.completed, the fulfillment logic is triggered. It retrieves the userId from the ClientReferenceId, creates a new Order and OrderItems from the user's cart, saves them to the database, and finally clears the cart. The endpoint must return a 200 OK response promptly to acknowledge receipt to Stripe; any long-running processes should be offloaded to a background job to prevent timeouts.44Phase 5: Deployment, Testing, and Frontend InteractionThe final phase brings the application to life by deploying it to the cloud, conducting end-to-end testing, and creating a simple user interface for interaction. This will be accomplished using exclusively free-tier services on Microsoft Azure.Section 5.1: Provisioning and Configuring Free-Tier Azure ResourcesThe user's primary constraint is that all services must be free. Azure offers specific tiers for its App Service and SQL Database products that are suitable for development, testing, and portfolio projects.Azure Service ConfigurationAzure App Service: An App Service Plan will be created in the Azure Portal using the F1 (Free) pricing tier. This tier runs on shared infrastructure and has quotas on CPU usage (60 minutes/day) but is sufficient for hosting a low-traffic portfolio API.46Azure SQL Database: An Azure SQL Database will be provisioned using the free offer. This provides a serverless database with a monthly allowance of 100,000 vCore seconds of compute and 32 GB of storage. A key feature of this tier is that it auto-pauses after a period of inactivity to conserve the vCore second allowance. While this is excellent for cost savings, it can result in a "cold start" delay of up to a minute when the API is first accessed after being idle. It is important to be aware of this limitation.48Firewall Configuration: After creating the SQL Database, its firewall must be configured to allow connections from the Azure App Service. This is a critical networking step to enable the deployed API to communicate with its database.Azure ServiceFree Tier NameMonthly QuotaKey LimitationsAzure App ServiceF1 (Free)60 CPU minutes/dayShared infrastructure, no SLA, no custom domain/SSL.Azure SQL DatabaseFree Offer100,000 vCore seconds, 32GB storageAuto-pauses after inactivity, 7-day backup retention, no SLA.Understanding these limitations is crucial for managing expectations about the performance and availability of the deployed application.49Section 5.2: Publishing the API to Azure from Visual StudioVisual Studio provides a streamlined process for deploying applications directly to Azure.Deployment StepsInitiate Publish: Right-click the ECommerce.Api project in Solution Explorer and select "Publish".50Select Target: Choose "Azure" as the target, then "Azure App Service (Windows/Linux)" and select the App Service instance created in the previous step.Configure Dependencies: The publish wizard will detect the dependency on SQL Server. This is the point to configure the connection to the Azure SQL Database. The connection string for the Azure database will be retrieved and set to be used by the application at runtime. This is typically stored in the App Service's configuration settings, overriding the local appsettings.json value.Configure Migrations: A powerful feature of the publish profile is the ability to automatically apply EF Core migrations upon deployment. By checking "Apply this migration on publish," the deployment process will ensure the Azure SQL Database schema is updated to the latest version, matching the application's code.50 While convenient for a portfolio project, in a high-availability production environment, it is best practice to generate SQL scripts from migrations and apply them in a controlled manner.Publish: Clicking "Publish" will build the application in Release mode, package the files, and deploy them to the configured Azure App Service.Section 5.3: Building a Minimalist Razor Pages Frontend with JavaScript fetchTo demonstrate interaction with the API, a simple frontend will be built. Instead of a full Single-Page Application (SPA) framework like React or Angular, this guide will use ASP.NET Core Razor Pages, a lightweight, server-side framework, combined with client-side JavaScript for API calls. This hybrid approach is simpler to set up and effectively showcases the API consumption.52Frontend ImplementationCreate Razor Pages Project: A new ASP.NET Core Web App (Razor Pages) project will be added to the solution.53 This project will run as a separate web application.Create Pages: Simple Razor pages (.cshtml) will be created for:Index.cshtml: Displays a list of products.Details.cshtml: Shows the details of a single product.Cart.cshtml: Displays the user's shopping cart.Login.cshtml: A form for user login.API Interaction with fetch: Each page will contain a <script> block with JavaScript that uses the browser's fetch API to communicate with the deployed e-commerce API.54The product pages will make anonymous GET requests to the public product endpoints.The login page will POST credentials to /api/auth/login. Upon success, the returned JWT will be stored in the browser's localStorage.The cart page and "Add to Cart" buttons will make authenticated requests. The JWT will be retrieved from localStorage and included in the Authorization header as a Bearer token.Example fetch call for an authenticated request:JavaScript// Example JavaScript to add an item to the cart
+async function addToCart(productId, quantity) {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) {
+        // Redirect to login or show message
+        return;
+    }
+
+    const response = await fetch('https://<your-api-app-name>.azurewebsites.net/api/shoppingcart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId: productId, quantity: quantity })
+    });
+
+    if (response.ok) {
+        const updatedCart = await response.json();
+        // Update the UI with the new cart data
+        console.log('Item added successfully', updatedCart);
+    } else {
+        console.error('Failed to add item to cart');
+    }
+}
+Section 5.4: End-to-End Testing with Postman and the Live FrontendThe final step is to thoroughly test the deployed system to ensure all components work together as expected.API Testing with PostmanPostman will be used to systematically test every endpoint of the deployed API. This provides a clear, technical way to validate functionality independent of the UI.55 The process involves:Calling the POST /api/auth/register endpoint to create a new user.Calling the POST /api/auth/login endpoint with the new user's credentials.Copying the JWT from the login response.For all protected endpoints, adding an Authorization header with the value Bearer <your_jwt>.Testing each CRUD endpoint for products (as admin), cart management, and the checkout process.The following table serves as a definitive specification and testing checklist for the API.EndpointDescriptionAuthorizationRequest Body ExampleSuccess ResponsePOST /api/auth/registerRegisters a new user.None{ "username": "test", "email": "test@test.com", "password": "..." }200 OKPOST /api/auth/loginLogs in a user and returns a JWT.None{ "username": "test", "password": "..." }200 OK with JWTGET /api/products/publicGets a list of all available products.NoneNone200 OK with product arrayPOST /api/productsCreates a new product.Bearer Token (Admin){ "name": "New Gadget", "price": 99.99,... }201 Created with new productPOST /api/shoppingcart/addAdds an item to the current user's cart.Bearer Token (User){ "productId": 1, "quantity": 2 }200 OK with updated cartPOST /api/checkoutCreates a Stripe Checkout Session.Bearer Token (User)None200 OK with session URLPOST /api/webhook/stripeReceives webhook events from Stripe.None (Signature verification)Stripe Event JSON200 OKFrontend and Webhook TestingUser Flow: A full walkthrough of the user journey on the Razor Pages frontend will be performed: registering, logging in, adding items, and initiating checkout.Webhook Verification: After a test payment, the Stripe Dashboard's "Events" section or the Stripe CLI will be used to confirm that the checkout.session.completed event was successfully sent to the deployed webhook URL and that a 200 OK response was received. The Azure SQL Database will be checked to confirm that a new Order was created.Conclusion and Future EnhancementsThis report has provided a comprehensive, end-to-end guide for building a sophisticated e-commerce API using a modern ASP.NET Core stack. By following the five phases, a developer can construct a portfolio-worthy application that demonstrates a wide array of essential skills: complex data modeling with Entity Framework Core, secure stateless authentication with JWTs and ASP.NET Core Identity, role-based authorization, RESTful API design, third-party payment integration with Stripe, and cloud deployment to Azure's free tier.The architectural decisions made—such as using controllers for structure, explicitly modeling join tables with payloads, seeding the database for immediate usability, and implementing secure webhook handling—reflect professional software engineering practices that go beyond basic tutorials. The resulting application is not only functional but also scalable, maintainable, and secure.This project serves as a strong foundation that can be extended in numerous ways to further showcase advanced capabilities. Potential future enhancements include:JWT Refresh Tokens: To improve user experience and security, a refresh token mechanism can be implemented. This allows the client to obtain a new, short-lived access token without requiring the user to log in again, while also providing a means to revoke access if a token is compromised.56Advanced Search and Filtering: The product search endpoint could be enhanced with pagination, more advanced filtering options (e.g., by category, brand), and multiple sorting criteria.Full-Fledged Frontend: The minimalist Razor Pages frontend could be replaced with a complete Single-Page Application (SPA) using a framework like React, Angular, or Vue, demonstrating modern client-side development skills.Order History and User Profiles: Additional endpoints and UI could be built to allow users to view their order history and manage their profile information.Containerization: The application could be containerized using Docker and deployed to Azure Container Apps or Azure Kubernetes Service (AKS) to demonstrate proficiency with container orchestration technologies.By successfully completing this project and exploring these potential enhancements, a developer can create a compelling and impressive centerpiece for their professional portfolio.
