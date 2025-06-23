@@ -1,5 +1,5 @@
 // Authentication and API utilities
-const API_BASE_URL = 'https://localhost:7155/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Token management
 const getToken = () => localStorage.getItem('jwt_token');
@@ -128,16 +128,22 @@ async function updateCartCount() {
         document.getElementById('cart-count').textContent = '0';
         return;
     }
-    
-    try {
+      try {
         const response = await apiCall('/shoppingcart');
         if (response.ok) {
             const cart = await response.json();
-            const totalItems = cart.Items.reduce((sum, item) => sum + item.quantity, 0);
+            const totalItems = cart && cart.Items && Array.isArray(cart.Items) 
+                ? cart.Items.reduce((sum, item) => sum + item.quantity, 0) 
+                : 0;
             document.getElementById('cart-count').textContent = totalItems;
         }
     } catch (error) {
         console.error('Error updating cart count:', error);
+        // Set cart count to 0 on error
+        const cartCountElement = document.getElementById('cart-count');
+        if (cartCountElement) {
+            cartCountElement.textContent = '0';
+        }
     }
 }
 

@@ -49,13 +49,12 @@
                         <p>Error loading cart. Please try again.</p>
                     </div>
                 `;
-            }
-        }
+            }        }
         
         function displayCart() {
             const container = document.getElementById('cart-container');
             
-            if (!cart || cart.Items.length === 0) {
+            if (!cart || !cart.Items || !Array.isArray(cart.Items) || cart.Items.length === 0) {
                 container.innerHTML = `
                     <div class="text-center">
                         <h4>Your cart is empty</h4>
