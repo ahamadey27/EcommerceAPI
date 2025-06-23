@@ -86,9 +86,9 @@
     - [x] Run `update-database` to generate the SQL schema.
 
 ## Phase 2: Secure Authentication and Authorization
-- [ ] **Step 2.1: Integrate ASP.NET Core Identity**
-    - [ ] Install NuGet package: `Microsoft.AspNetCore.Identity.EntityFrameworkCore`.
-    - [ ] Configure Identity services in `Program.cs` using `AddIdentity`.
+- [x] **Step 2.1: Integrate ASP.NET Core Identity**
+    - [x] Install NuGet package: `Microsoft.AspNetCore.Identity.EntityFrameworkCore`.
+    - [x] Configure Identity services in `Program.cs` using `AddIdentity`.
 - [ ] **Step 2.2: Implement JWT-Based Authentication**
     - [ ] Install NuGet package: `Microsoft.AspNetCore.Authentication.JwtBearer`.
     - [ ] Configure JWT secret and issuer in `appsettings.json`.
