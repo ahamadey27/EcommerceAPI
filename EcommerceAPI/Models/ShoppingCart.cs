@@ -15,8 +15,8 @@ namespace EcommerceAPI.Models
         // Navigation property - EF Core uses this to create the relationship
         public ApplicationUser User { get; set; } = null!;
 
-        // Collection of items in this cart
-        public ICollection<CartItem> Items { get; set; } = new List<CartItem>();
+        // Navigation property - one cart has many cart items
+        public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
         // Timestamps for tracking cart activity
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

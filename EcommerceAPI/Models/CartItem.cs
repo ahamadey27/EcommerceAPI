@@ -9,20 +9,22 @@ namespace EcommerceAPI.Models
     {
         public int Id { get; set; }
 
-        //How man of this product the user wants
-        public int Quantity { get; set; }
+        // Foreign key to the shopping cart
+        public int CartId { get; set; }
+        public ShoppingCart Cart { get; set; } = null!;
 
-        //Foreign ket to the product
+        // Foreign key to the product
         public int ProductId { get; set; }
-
         public Product Product { get; set; } = null!;
 
-        // Foreign key to the shopping cart
-        public int ShoppingCartId { get; set; }
-        public ShoppingCart ShoppingCart { get; set; } = null!;
+        // How many of this product the user wants
+        public int Quantity { get; set; }
 
-        //when this item is added to cart
+        // When this item is added to cart
+        public DateTime CreatedAt { get; set; }
 
-        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+        // When this item is last updated in the cart
+        public DateTime UpdatedAt { get; set; }
+        public object ShoppingCart { get; internal set; }
     }
 }

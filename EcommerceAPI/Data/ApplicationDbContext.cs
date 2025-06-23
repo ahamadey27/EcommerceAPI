@@ -40,13 +40,11 @@ namespace EcommerceAPI.Data
                 .HasMany(u => u.Orders)
                 .WithOne(o => o.User)
                 .HasForeignKey(o => o.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-        // Configure ShoppingCart -> CartItem (One-to-Many)
+                .OnDelete(DeleteBehavior.Restrict);        // Configure ShoppingCart -> CartItem (One-to-Many)
         builder.Entity<ShoppingCart>()
-                .HasMany(c => c.Items)
-                .WithOne(ci => ci.ShoppingCart)
-                .HasForeignKey(ci => ci.ShoppingCartId)
+                .HasMany(c => c.CartItems)
+                .WithOne(ci => ci.Cart)
+                .HasForeignKey(ci => ci.CartId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         // Configure Product -> CartItem (One-to-Many)
@@ -88,10 +86,8 @@ namespace EcommerceAPI.Data
                 .HasIndex(p => p.Name);
 
         builder.Entity<Order>()
-                .HasIndex(o => o.OrderDate);
-
-        builder.Entity<CartItem>()
-                .HasIndex(ci => new { ci.ShoppingCartId, ci.ProductId })
+                .HasIndex(o => o.OrderDate);        builder.Entity<CartItem>()
+                .HasIndex(ci => new { ci.CartId, ci.ProductId })
                 .IsUnique();
             
         }
