@@ -58,9 +58,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Register ApplicationDbContext with SQLite
+// Register ApplicationDbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure ASP.NET Core Identity with Role Management
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
