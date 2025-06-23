@@ -141,10 +141,10 @@
     - [ ] Use the Azure CLI or VS Code Azure Extensions to deploy.
     - [ ] Configure the Azure SQL connection string in Azure App Service Configuration.
     - [ ] Run database migrations against the Azure SQL database using dotnet CLI or Azure Cloud Shell.
-- [ ] **Step 5.3: Build Minimalist Frontend**
-    - [ ] Create a separate ASP.NET Core Razor Pages project.
-    - [ ] Use JavaScript `fetch` API to call the deployed API endpoints.
-    - [ ] Implement logic to store and send the JWT in the `Authorization` header for protected requests.
+- [x] **Step 5.3: Build Minimalist Frontend**
+    - [x] Create a separate ASP.NET Core Razor Pages project.
+    - [x] Use JavaScript `fetch` API to call the deployed API endpoints.
+    - [x] Implement logic to store and send the JWT in the `Authorization` header for protected requests.
 - [ ] **Step 5.4: End-to-End Testing**
     - [ ] Use Postman, Thunder Client (VS Code extension), or the built-in REST Client to test every API endpoint directly.
     - [ ] Perform a full user flow test on the live frontend: register, log in, add to cart, initiate payment.
