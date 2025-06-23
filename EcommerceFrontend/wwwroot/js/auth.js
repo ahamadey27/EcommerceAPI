@@ -133,7 +133,7 @@ async function updateCartCount() {
         const response = await apiCall('/shoppingcart');
         if (response.ok) {
             const cart = await response.json();
-            const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+            const totalItems = cart.Items.reduce((sum, item) => sum + item.quantity, 0);
             document.getElementById('cart-count').textContent = totalItems;
         }
     } catch (error) {
@@ -175,25 +175,22 @@ const API = {
         const response = await apiCall('/shoppingcart');
         return response.json();
     },
-    
-    async addToCart(productId, quantity = 1) {
-        const response = await apiCall('/shoppingcart/add', {
+      async addToCart(productId, quantity = 1) {
+        const response = await apiCall('/shoppingcart/items', {
             method: 'POST',
             body: JSON.stringify({ productId, quantity })
         });
         return response.json();
     },
-    
-    async updateCartItem(productId, quantity) {
-        const response = await apiCall(`/shoppingcart/update/${productId}`, {
+      async updateCartItem(productId, quantity) {
+        const response = await apiCall(`/shoppingcart/items/${productId}`, {
             method: 'PUT',
             body: JSON.stringify({ quantity })
         });
         return response.json();
     },
-    
-    async removeFromCart(productId) {
-        const response = await apiCall(`/shoppingcart/remove/${productId}`, {
+      async removeFromCart(productId) {
+        const response = await apiCall(`/shoppingcart/items/${productId}`, {
             method: 'DELETE'
         });
         return response.ok;

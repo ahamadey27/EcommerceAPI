@@ -55,7 +55,7 @@
         function displayCart() {
             const container = document.getElementById('cart-container');
             
-            if (!cart || cart.items.length === 0) {
+            if (!cart || cart.Items.length === 0) {
                 container.innerHTML = `
                     <div class="text-center">
                         <h4>Your cart is empty</h4>
@@ -66,13 +66,13 @@
                 return;
             }
             
-            const cartItems = cart.items.map(item => `
+            const cartItems = cart.Items.map(item => `
                 <div class="card mb-3">
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-6">
                                 <h5 class="card-title">${item.productName}</h5>
-                                <p class="card-text text-muted">$${item.price.toFixed(2)} each</p>
+                                <p class="card-text text-muted">$${item.productPrice.toFixed(2)} each</p>
                             </div>
                             <div class="col-md-3">
                                 <div class="input-group">
@@ -84,7 +84,7 @@
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <strong>$${(item.price * item.quantity).toFixed(2)}</strong>
+                                <strong>$${(item.productPrice * item.quantity).toFixed(2)}</strong>
                             </div>
                             <div class="col-md-1">
                                 <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.productId})">
@@ -96,7 +96,7 @@
                 </div>
             `).join('');
             
-            const total = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const total = cart.Items.reduce((sum, item) => sum + (item.productPrice * item.quantity), 0);
             
             container.innerHTML = `
                 <div class="cart-items">
