@@ -149,6 +149,7 @@
     - [ ] Use Postman, Thunder Client (VS Code extension), or the built-in REST Client to test every API endpoint directly.
     - [ ] Perform a full user flow test on the live frontend: register, log in, add to cart, initiate payment.
     - [ ] Verify order creation in the Azure SQL database after a successful test payment.
+    - [ ] **Debug and resolve "Failed to Fetch" error between frontend and API.**
 
 ## Phase 6: (Optional) Advanced Enhancements & Ongoing Maintenance
 - [ ] **Step 6.1: Implement JWT Refresh Tokens**

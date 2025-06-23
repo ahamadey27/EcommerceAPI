@@ -14,6 +14,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers(); // Enable controller-based routing
 builder.Services.AddEndpointsApiExplorer(); // Required for Swagger
 
+// Configure CORS to allow requests from the frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("https://localhost:7045", "http://localhost:5045") // Frontend URLs
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 // Add Swagger with JWT authentication support
 builder.Services.AddSwaggerGen(c =>
 {
@@ -118,6 +131,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Use CORS policy (must be before Authentication/Authorization)
+app.UseCors("AllowFrontend");
 
 // Authentication & Authorization middleware (order matters!)
 app.UseAuthentication(); // Determines who the user is
