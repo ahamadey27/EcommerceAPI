@@ -89,11 +89,11 @@
 - [x] **Step 2.1: Integrate ASP.NET Core Identity**
     - [x] Install NuGet package: `Microsoft.AspNetCore.Identity.EntityFrameworkCore`.
     - [x] Configure Identity services in `Program.cs` using `AddIdentity`.
-- [ ] **Step 2.2: Implement JWT-Based Authentication**
-    - [ ] Install NuGet package: `Microsoft.AspNetCore.Authentication.JwtBearer`.
-    - [ ] Configure JWT secret and issuer in `appsettings.json`.
-    - [ ] Configure JWT Bearer authentication middleware in `Program.cs`.
-    - [ ] Create `AuthController.cs` with custom `Register` and `Login` endpoints that generate JWTs.
+- [x] **Step 2.2: Implement JWT-Based Authentication**
+    - [x] Install NuGet package: `Microsoft.AspNetCore.Authentication.JwtBearer`.
+    - [x] Configure JWT secret and issuer in `appsettings.json`.
+    - [x] Configure JWT Bearer authentication middleware in `Program.cs`.
+    - [x] Create `AuthController.cs` with custom `Register` and `Login` endpoints that generate JWTs.
 - [ ] **Step 2.3: Implement and Seed User Roles**
     - [ ] Enable role management via `AddRoles<IdentityRole>()`.
     - [ ] Create a `DbInitializer` class to seed "Admin" and "User" roles and create a default admin user on application startup.
