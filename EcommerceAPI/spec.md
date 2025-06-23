@@ -69,12 +69,12 @@
 # Development Plan
 
 ## Phase 1: Foundation and Data Modeling
-- [ ] **Step 1.1: Project Initialization**
+- [x] **Step 1.1: Project Initialization**
     - [x] Create new ASP.NET Core Web API project (with Controllers).
     - [x] Enable OpenAPI (Swagger) support.
     - [x] Install NuGet packages: `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Tools`.
-- [ ] **Step 1.2: Architect Data Schema**
-    - [ ] Define entity classes: `ApplicationUser`, `Product`, `ShoppingCart`, `CartItem`, `Order`, `OrderItem`.
+- [x] **Step 1.2: Architect Data Schema**
+    - [x] Define entity classes: `ApplicationUser`, `Product`, `ShoppingCart`, `CartItem`, `Order`, `OrderItem`.
 - [ ] **Step 1.3: Configure DbContext**
     - [ ] Create `ApplicationDbContext` inheriting from `IdentityDbContext<ApplicationUser>`.
     - [ ] Add `DbSet<>` properties for all custom entities.
