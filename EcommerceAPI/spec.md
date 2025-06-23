@@ -125,6 +125,11 @@
     - [x] Handle the `checkout.session.completed` event to create a new `Order`, clear the user's `ShoppingCart`, and save to the database.
 
 ## Phase 5: Deployment, Testing, and Frontend Interaction
+- [ ] **Step 5.0: Local API Testing and Stripe Integration**
+    - [ ] Test all API endpoints using REST Client or Swagger UI.
+    - [ ] Set up Stripe test keys and verify checkout session creation.
+    - [ ] Use ngrok to expose local webhook endpoint for Stripe testing.
+    - [ ] Test complete payment flow: register → login → add products → checkout → webhook.
 - [ ] **Step 5.1: Provision and Configure Azure Resources**
     - [ ] Create a free-tier Azure App Service.
     - [ ] Create a free-tier Azure SQL Database.
