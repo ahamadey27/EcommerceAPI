@@ -112,9 +112,9 @@
     - [x] Implement on-the-fly cart creation for new users.
 
 ## Phase 4: Payment Processing and Order Fulfillment
-- [ ] **Step 4.1: Integrate Stripe Payment Gateway**
-    - [ ] Install NuGet package: `Stripe.net`.
-    - [ ] Configure Stripe API keys in `appsettings.json` and initialize in `Program.cs`.
+- [x] **Step 4.1: Integrate Stripe Payment Gateway**
+    - [x] Install NuGet package: `Stripe.net`.
+    - [x] Configure Stripe API keys in `appsettings.json` and initialize in `Program.cs`.
 - [ ] **Step 4.2: Implement Stripe Checkout Flow (`CheckoutController.cs`)**
     - [ ] Create an endpoint to generate a Stripe `SessionCreateOptions` object from the user's cart.
     - [ ] Set the `ClientReferenceId` to the application's `UserId` to link the transaction.
