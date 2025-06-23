@@ -12,8 +12,17 @@
             </div>
             <div class="card-body">
                 <div id="alert-container"></div>
-                
-                <form id="register-form">
+                  <form id="register-form">
+                    <div class="mb-3">
+                        <label for="firstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="firstName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="lastName" required>
+                    </div>
+                    
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
                         <input type="email" class="form-control" id="email" required>
@@ -22,6 +31,7 @@
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" required>
+                        <div class="form-text">Password must be at least 6 characters long.</div>
                     </div>
                     
                     <div class="mb-3">
@@ -44,10 +54,11 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.getElementById('register-form').addEventListener('submit', async function(e) {
+    <script>        document.getElementById('register-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -74,7 +85,7 @@
             spinner.classList.remove('d-none');
             
             try {
-                const result = await register(email, password);
+                const result = await register(firstName, lastName, email, password, confirmPassword);
                 
                 if (result.success) {
                     showAlert('Registration successful! Redirecting...', 'success');
