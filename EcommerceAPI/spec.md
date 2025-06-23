@@ -126,7 +126,10 @@
 
 ## Phase 5: Deployment, Testing, and Frontend Interaction
 - [ ] **Step 5.0: Local API Testing and Stripe Integration**
-    - [ ] Test all API endpoints using REST Client or Swagger UI.
+    - [x] Test all API endpoints using REST Client or Swagger UI.
+    - [x] Test authentication (admin and customer accounts).
+    - [x] Test product management (create, view products).
+    - [x] Test shopping cart functionality (add, view, update items).
     - [ ] Set up Stripe test keys and verify checkout session creation.
     - [ ] Use ngrok to expose local webhook endpoint for Stripe testing.
     - [ ] Test complete payment flow: register → login → add products → checkout → webhook.
