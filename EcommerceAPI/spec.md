@@ -75,10 +75,10 @@
     - [x] Install NuGet packages: `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Tools`.
 - [x] **Step 1.2: Architect Data Schema**
     - [x] Define entity classes: `ApplicationUser`, `Product`, `ShoppingCart`, `CartItem`, `Order`, `OrderItem`.
-- [ ] **Step 1.3: Configure DbContext**
-    - [ ] Create `ApplicationDbContext` inheriting from `IdentityDbContext<ApplicationUser>`.
-    - [ ] Add `DbSet<>` properties for all custom entities.
-    - [ ] Register the `DbContext` in `Program.cs` and configure the connection string.
+- [x] **Step 1.3: Configure DbContext**
+    - [x] Create `ApplicationDbContext` inheriting from `IdentityDbContext<ApplicationUser>`.
+    - [x] Add `DbSet<>` properties for all custom entities.
+    - [x] Register the `DbContext` in `Program.cs` and configure the connection string.
 - [ ] **Step 1.4: Define Entity Relationships**
     - [ ] Use the Fluent API in `OnModelCreating` to configure one-to-many and one-to-one relationships.
 - [ ] **Step 1.5: Create Database with Migrations**
