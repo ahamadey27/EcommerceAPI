@@ -130,7 +130,7 @@
     - [x] Test authentication (admin and customer accounts).
     - [x] Test product management (create, view products).
     - [x] Test shopping cart functionality (add, view, update items).
-    - [ ] Set up Stripe test keys and verify checkout session creation.
+    - [x] Set up Stripe test keys and verify checkout session creation.
     - [ ] Use ngrok to expose local webhook endpoint for Stripe testing.
     - [ ] Test complete payment flow: register → login → add products → checkout → webhook.
 - [ ] **Step 5.1: Provision and Configure Azure Resources**
