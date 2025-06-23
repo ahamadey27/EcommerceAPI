@@ -55,20 +55,18 @@ namespace EcommerceAPI.Controllers
                     webhookSecret
                 );
 
-                _logger.LogInformation($"Received Stripe webhook: {stripeEvent.Type}");
-
-                // Handle different event types
+                _logger.LogInformation($"Received Stripe webhook: {stripeEvent.Type}");                // Handle different event types
                 switch (stripeEvent.Type)
                 {
-                    case Events.CheckoutSessionCompleted:
+                    case "checkout.session.completed":
                         await HandleCheckoutSessionCompleted(stripeEvent);
                         break;
                     
-                    case Events.PaymentIntentSucceeded:
+                    case "payment_intent.succeeded":
                         _logger.LogInformation("Payment succeeded");
                         break;
                     
-                    case Events.PaymentIntentPaymentFailed:
+                    case "payment_intent.payment_failed":
                         await HandlePaymentFailed(stripeEvent);
                         break;
                     
@@ -125,9 +123,7 @@ namespace EcommerceAPI.Controllers
                 {
                     _logger.LogWarning($"No cart found for user {userId}");
                     return;
-                }
-
-                // Create order from cart
+                }                // Create order from cart
                 var order = new Order
                 {
                     UserId = userId,
@@ -137,8 +133,8 @@ namespace EcommerceAPI.Controllers
                     StripeSessionId = session.Id,
                     PaymentIntentId = session.PaymentIntentId,
                     CustomerEmail = session.CustomerEmail,
-                    ShippingAddress = FormatAddress(session.ShippingDetails?.Address),
-                    BillingAddress = FormatAddress(session.CustomerDetails?.Address)
+                    ShippingAddress = FormatAddress(session.CustomerDetails?.Address) ?? string.Empty,
+                    BillingAddress = FormatAddress(session.CustomerDetails?.Address) ?? string.Empty
                 };
 
                 // Create order items from cart items
@@ -146,8 +142,7 @@ namespace EcommerceAPI.Controllers
                 {
                     ProductId = ci.ProductId,
                     Quantity = ci.Quantity,
-                    Price = ci.Product.Price, // Capture price at time of purchase
-                    ProductName = ci.Product.Name // Capture name in case product changes
+                    Price = ci.Product.Price // Capture price at time of purchase
                 }).ToList();
 
                 // Add order to database
