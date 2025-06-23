@@ -11,11 +11,10 @@ namespace EcommerceAPI.Models
         public int Id { get; set; }
 
         //Quantity of this prodcut in order
-        public int Quantity { get; set; }
-
-        // CRITICAL: Price at the time of purchase(not current product price)
+        public int Quantity { get; set; }        // CRITICAL: Price at the time of purchase(not current product price)
         // This ensures historical accuracy of orders even if product prices change
         [Column(TypeName = "decimal(18, 2)")]
+        public decimal Price { get; set; }
 
         //Link to the product
         public int ProductId { get; set; }
