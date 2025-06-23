@@ -79,8 +79,8 @@
     - [x] Create `ApplicationDbContext` inheriting from `IdentityDbContext<ApplicationUser>`.
     - [x] Add `DbSet<>` properties for all custom entities.
     - [x] Register the `DbContext` in `Program.cs` and configure the connection string.
-- [ ] **Step 1.4: Define Entity Relationships**
-    - [ ] Use the Fluent API in `OnModelCreating` to configure one-to-many and one-to-one relationships.
+- [x] **Step 1.4: Define Entity Relationships**
+    - [x] Use the Fluent API in `OnModelCreating` to configure one-to-many and one-to-one relationships.
 - [ ] **Step 1.5: Create Database with Migrations**
     - [ ] Run `add-migration InitialCreate`.
     - [ ] Run `update-database` to generate the SQL schema.

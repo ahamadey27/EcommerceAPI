@@ -89,6 +89,30 @@ namespace EcommerceAPI.Data
                 .HasForeignKey(oi => oi.ProductId)     // Foreign key in OrderItem table
                 .OnDelete(DeleteBehavior.Restrict);    // Keep order history even if product deleted
 
+            // Configure decimal precision for monetary values
+            builder.Entity<Product>()
+                .Property(p => p.Price)
+                .HasPrecision(18, 2);                  // 18 digits total, 2 decimal places
+
+            builder.Entity<Order>()
+                .Property(o => o.TotalAmount)
+                .HasPrecision(18, 2);
+
+            builder.Entity<OrderItem>()
+                .Property(oi => oi.Price)
+                .HasPrecision(18, 2);
+
+            // Configure indexes for better query performance
+            builder.Entity<Product>()
+                .HasIndex(p => p.Name);                // Index on product name for searches
+
+            builder.Entity<Order>()
+                .HasIndex(o => o.OrderDate);           // Index on order date for date-based queries
+
+            builder.Entity<CartItem>()
+                .HasIndex(ci => new { ci.ShoppingCartId, ci.ProductId })  // Composite index
+                .IsUnique();                           // Prevent duplicate products in same cart
+
 
         }
 
