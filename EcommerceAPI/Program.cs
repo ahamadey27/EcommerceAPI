@@ -111,46 +111,102 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Ensure database is created and migrate
+// Add comprehensive error logging
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
 try
 {
-    using (var scope = app.Services.CreateScope())
+    logger.LogInformation("Starting application configuration...");
+
+    // Configure the HTTP request pipeline
+    if (app.Environment.IsDevelopment())
     {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        
-        // Ensure database is created
-        context.Database.EnsureCreated();
-        
-        // Seed database with roles and default admin user
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        await DbInitializer.SeedAsync(userManager, roleManager);
+        app.UseSwagger(); // Enable Swagger JSON endpoint
+        app.UseSwaggerUI(); // Enable Swagger UI
+        logger.LogInformation("Swagger enabled for development environment");
     }
+
+    // Don't force HTTPS redirection on Azure (it's handled by the load balancer)
+    if (!app.Environment.IsProduction())
+    {
+        app.UseHttpsRedirection();
+    }
+
+    // Use CORS policy (must be before Authentication/Authorization)
+    app.UseCors("AllowFrontend");
+
+    // Authentication & Authorization middleware (order matters!)
+    app.UseAuthentication(); // Determines who the user is
+    app.UseAuthorization();  // Determines what the user can do
+
+    // Map controller routes instead of minimal API endpoints
+    app.MapControllers();
+
+    // Add health check and info endpoints
+    app.MapGet("/health", () => 
+    {
+        logger.LogInformation("Health check endpoint accessed");
+        return Results.Ok(new { 
+            Status = "Healthy", 
+            Timestamp = DateTime.UtcNow,
+            Environment = app.Environment.EnvironmentName 
+        });
+    });
+    
+    app.MapGet("/", () => 
+    {
+        logger.LogInformation("Root endpoint accessed");
+        return Results.Ok(new { 
+            Message = "E-Commerce API is running!", 
+            Documentation = "/swagger",
+            Health = "/health",
+            Environment = app.Environment.EnvironmentName,
+            Timestamp = DateTime.UtcNow
+        });
+    });
+
+    logger.LogInformation("Application configuration completed successfully");
+
+    // Initialize database synchronously but with proper error handling
+    try
+    {
+        logger.LogInformation("Starting database initialization...");
+        
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            
+            // Test database connection first
+            logger.LogInformation("Testing database connection...");
+            var connectionString = app.Configuration.GetConnectionString("DefaultConnection");
+            logger.LogInformation($"Using connection string: {connectionString}");
+            
+            // Ensure database is created
+            logger.LogInformation("Ensuring database is created...");
+            context.Database.EnsureCreated();
+            logger.LogInformation("Database creation completed");
+            
+            // Seed database with roles and default admin user
+            logger.LogInformation("Starting database seeding...");
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            DbInitializer.SeedAsync(userManager, roleManager).Wait();
+            logger.LogInformation("Database seeding completed");
+        }
+        
+        logger.LogInformation("Database initialization completed successfully");
+    }
+    catch (Exception dbEx)
+    {
+        logger.LogError(dbEx, "Database initialization failed, but continuing with app startup");
+        // Don't crash the app, just log the error
+    }
+
+    logger.LogInformation("Starting web application...");
+    app.Run();
 }
 catch (Exception ex)
 {
-    // Log the error but don't crash the app
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "An error occurred during database initialization");
+    logger.LogCritical(ex, "Application failed to start");
+    throw;
 }
-
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger(); // Enable Swagger JSON endpoint
-    app.UseSwaggerUI(); // Enable Swagger UI
-}
-
-app.UseHttpsRedirection();
-
-// Use CORS policy (must be before Authentication/Authorization)
-app.UseCors("AllowFrontend");
-
-// Authentication & Authorization middleware (order matters!)
-app.UseAuthentication(); // Determines who the user is
-app.UseAuthorization();  // Determines what the user can do
-
-// Map controller routes instead of minimal API endpoints
-app.MapControllers();
-
-app.Run();
