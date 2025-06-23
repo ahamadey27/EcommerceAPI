@@ -31,9 +31,17 @@ namespace EcommerceAPI.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); // CRITICAL: Configures Identity tables
+                                           // Entity relationship configurations using Fluent API to define foreign keys, constraints, etc.
 
-            // Entity relationship configurations will be added in Step 1.4
-            // This is where we'll use Fluent API to define foreign keys, constraints, etc.
+            // Configure ApplicationUser -> ShoppingCart (One-to-One)
+            builder.Entity<ApplicationUser>()
+                .HasOne(u => u.ShoppingCart) //User has one cart
+                .WithOne(c => c.User)        //Cart belongs to user
+                .HasForeignKey<ShoppingCart>(c => c.UserId) //Foreign key is in shopping cart
+                .OnDelete(DeleteBehavior.Cascade); //Delete cart when user is deleted 
+
+
+
         }
 
 
