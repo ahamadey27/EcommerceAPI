@@ -1,30 +1,27 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace EcommerceAPI.Models
 {
     public class CartItem
     {
         public int Id { get; set; }
-
-        // Foreign key to the shopping cart
-        public int CartId { get; set; }
-        public ShoppingCart Cart { get; set; } = null!;
-
-        // Foreign key to the product
-        public int ProductId { get; set; }
-        public Product Product { get; set; } = null!;
-
-        // How many of this product the user wants
+        
+        [Required]
+        public int CartId { get; set; }  // Foreign key to ShoppingCart
+        
+        [Required]
+        public int ProductId { get; set; }  // Foreign key to Product
+        
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be at least 1")]
         public int Quantity { get; set; }
-
-        // When this item is added to cart
-        public DateTime CreatedAt { get; set; }
-
-        // When this item is last updated in the cart
-        public DateTime UpdatedAt { get; set; }
-        public object ShoppingCart { get; internal set; }
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        public ShoppingCart Cart { get; set; } = null!;
+        public Product Product { get; set; } = null!;
     }
 }
