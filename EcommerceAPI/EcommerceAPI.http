@@ -1,11 +1,11 @@
 @EcommerceAPI_HostAddress = http://localhost:5000
 
-# Test Authentication
+### 1. Register a new regular user
 POST {{EcommerceAPI_HostAddress}}/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "test@example.com",
+  "email": "testuser@example.com",
   "password": "TestPassword123!",
   "firstName": "Test",
   "lastName": "User"
@@ -13,18 +13,113 @@ Content-Type: application/json
 
 ###
 
+### 2. Login as regular user
 POST {{EcommerceAPI_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "test@example.com",
+  "email": "testuser@example.com",
   "password": "TestPassword123!"
 }
 
 ###
 
-# Test Products (public)
+### 3. Login as admin (seeded user)
+POST {{EcommerceAPI_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@ecommerce.com",
+  "password": "Admin123!"
+}
+
+###
+
+### 4. Get all products (public endpoint)
 GET {{EcommerceAPI_HostAddress}}/api/products
 Accept: application/json
+
+###
+
+### 5. Create a product (Admin only - use JWT from admin login)
+POST {{EcommerceAPI_HostAddress}}/api/products
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "name": "Wireless Headphones",
+  "description": "High-quality wireless headphones with noise cancellation",
+  "price": 199.99,
+  "category": "Electronics",
+  "stockQuantity": 50
+}
+
+###
+
+### 6. Create another product
+POST {{EcommerceAPI_HostAddress}}/api/products
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "name": "Gaming Mouse",
+  "description": "Ergonomic gaming mouse with RGB lighting",
+  "price": 79.99,
+  "category": "Electronics",
+  "stockQuantity": 25
+}
+
+###
+
+### 7. Get user's shopping cart (requires user JWT)
+GET {{EcommerceAPI_HostAddress}}/api/shoppingcart
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+
+###
+
+### 8. Add item to cart (use product ID from step 5)
+POST {{EcommerceAPI_HostAddress}}/api/shoppingcart/add
+Content-Type: application/json
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+###
+
+### 9. Add another item to cart
+POST {{EcommerceAPI_HostAddress}}/api/shoppingcart/add
+Content-Type: application/json
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+
+{
+  "productId": 2,
+  "quantity": 1
+}
+
+###
+
+### 10. View cart contents
+GET {{EcommerceAPI_HostAddress}}/api/shoppingcart
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+
+###
+
+### 11. Update cart item quantity
+PUT {{EcommerceAPI_HostAddress}}/api/shoppingcart/update/1
+Content-Type: application/json
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+
+{
+  "quantity": 3
+}
+
+###
+
+### 12. Get checkout info
+GET {{EcommerceAPI_HostAddress}}/api/checkout/info
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
 
 ###
