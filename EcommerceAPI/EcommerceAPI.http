@@ -1,6 +1,30 @@
-@EcommerceAPI_HostAddress = http://localhost:5050
+@EcommerceAPI_HostAddress = http://localhost:5000
 
-GET {{EcommerceAPI_HostAddress}}/weatherforecast/
+# Test Authentication
+POST {{EcommerceAPI_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "TestPassword123!",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+###
+
+POST {{EcommerceAPI_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "TestPassword123!"
+}
+
+###
+
+# Test Products (public)
+GET {{EcommerceAPI_HostAddress}}/api/products
 Accept: application/json
 
 ###

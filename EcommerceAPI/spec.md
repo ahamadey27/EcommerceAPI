@@ -8,7 +8,7 @@
 
 ## Environment/Hosting
 - **Local Development Machine:** Windows/macOS/Linux
-- **IDE:** Visual Studio 2022
+- **IDE:** Visual Studio Code with C# Extension
 - **Version Control:** Git
 - **Cloud Hosting:** Microsoft Azure (App Service and SQL Database Free Tiers)
 
@@ -130,15 +130,15 @@
     - [ ] Create a free-tier Azure SQL Database.
     - [ ] Configure the database firewall to allow access from the App Service.
 - [ ] **Step 5.2: Publish API to Azure**
-    - [ ] Use the Visual Studio "Publish" feature.
-    - [ ] Configure the Azure SQL connection string in the publish profile.
-    - [ ] Enable "Apply this migration on publish" to automate schema updates.
+    - [ ] Use the Azure CLI or VS Code Azure Extensions to deploy.
+    - [ ] Configure the Azure SQL connection string in Azure App Service Configuration.
+    - [ ] Run database migrations against the Azure SQL database using dotnet CLI or Azure Cloud Shell.
 - [ ] **Step 5.3: Build Minimalist Frontend**
     - [ ] Create a separate ASP.NET Core Razor Pages project.
     - [ ] Use JavaScript `fetch` API to call the deployed API endpoints.
     - [ ] Implement logic to store and send the JWT in the `Authorization` header for protected requests.
 - [ ] **Step 5.4: End-to-End Testing**
-    - [ ] Use Postman to test every API endpoint directly.
+    - [ ] Use Postman, Thunder Client (VS Code extension), or the built-in REST Client to test every API endpoint directly.
     - [ ] Perform a full user flow test on the live frontend: register, log in, add to cart, initiate payment.
     - [ ] Verify order creation in the Azure SQL database after a successful test payment.
 
