@@ -1,9 +1,16 @@
+using Microsoft.EntityFrameworkCore;
+using EcommerceAPI.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers(); // Enable controller-based routing
 builder.Services.AddEndpointsApiExplorer(); // Required for Swagger
 builder.Services.AddSwaggerGen(); // Add Swagger generation
+
+// Register ApplicationDbContext with SQL Server
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 

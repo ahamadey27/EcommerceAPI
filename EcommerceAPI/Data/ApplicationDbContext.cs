@@ -8,8 +8,34 @@ using EcommerceAPI.Models;
 
 namespace EcommerceAPI.Data
 {
-    public class ApplicationDbContext
+    // Inherits from IdentityDbContext to get all ASP.NET Core Identity tables
+    // while adding our custom business entities
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        
+        // Constructor accepts DbContextOptions for configuration (connection string, etc.)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
+
+        // DbSet properties expose your entities as queryable collections
+        // Entity Framework uses these to generate database tables        public DbSet<Product> Products { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+
+
+        // OnModelCreating is where you'll configure entity relationships using Fluent API
+        // We'll configure relationships in Step 1.4
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder); // CRITICAL: Configures Identity tables
+
+            // Entity relationship configurations will be added in Step 1.4
+            // This is where we'll use Fluent API to define foreign keys, constraints, etc.
+        }
+
+
     }
 }
