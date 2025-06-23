@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -27,13 +28,12 @@ public class AuthController : ControllerBase
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
-    }
-
-    /// <summary>
+    }    /// <summary>
     /// Registers a new user and returns a JWT token
     /// POST: api/auth/register
     /// </summary>
     [HttpPost("register")]
+    [AllowAnonymous] // Allow anonymous access - users need this to create accounts
     public async Task<IActionResult> Register([FromBody] RegisterDto model)
     {
         // Validate incoming data using model validation attributes
@@ -75,13 +75,12 @@ public class AuthController : ControllerBase
             LastName = user.LastName,
             ExpiresAt = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JWT:ExpiryInMinutes"]!))
         });
-    }
-
-    /// <summary>
+    }    /// <summary>
     /// Authenticates user and returns JWT token
     /// POST: api/auth/login
     /// </summary>
     [HttpPost("login")]
+    [AllowAnonymous] // Allow anonymous access - users need this to get JWT tokens
     public async Task<IActionResult> Login([FromBody] LoginDto model)
     {
         // Validate incoming login data
