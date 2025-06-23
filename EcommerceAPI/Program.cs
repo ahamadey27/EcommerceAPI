@@ -58,9 +58,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Register ApplicationDbContext with SQL Server
+// Register ApplicationDbContext with SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure ASP.NET Core Identity with Role Management
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -111,9 +111,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
-
-// Configure Stripe
-StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // Seed database with roles and default admin user
 using (var scope = app.Services.CreateScope())
