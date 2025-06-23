@@ -41,20 +41,19 @@
         async function loadCart() {
             try {
                 cart = await API.getCart();
-                displayCart();
-            } catch (error) {
+                displayCart();            } catch (error) {
                 console.error('Error loading cart:', error);
                 document.getElementById('cart-container').innerHTML = `
                     <div class="alert alert-warning">
                         <p>Error loading cart. Please try again.</p>
                     </div>
                 `;
-            }        }
-        
-        function displayCart() {
+            }
+        }
+          function displayCart() {
             const container = document.getElementById('cart-container');
             
-            if (!cart || !cart.Items || !Array.isArray(cart.Items) || cart.Items.length === 0) {
+            if (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0) {
                 container.innerHTML = `
                     <div class="text-center">
                         <h4>Your cart is empty</h4>
@@ -65,7 +64,7 @@
                 return;
             }
             
-            const cartItems = cart.Items.map(item => `
+            const cartItems = cart.items.map(item => `
                 <div class="card mb-3">
                     <div class="card-body">
                         <div class="row align-items-center">
@@ -95,7 +94,7 @@
                 </div>
             `).join('');
             
-            const total = cart.Items.reduce((sum, item) => sum + (item.productPrice * item.quantity), 0);
+            const total = cart.items.reduce((sum, item) => sum + (item.productPrice * item.quantity), 0);
             
             container.innerHTML = `
                 <div class="cart-items">

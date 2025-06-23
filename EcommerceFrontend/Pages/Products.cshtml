@@ -6,7 +6,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Products</h2>
-    <div class="auth-user">
+    <div class="auth-admin">
         <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">
             Add Product
         </button>
@@ -117,21 +117,31 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                </div>            `).join('');
             
             showForAuth('.auth-user');
             showForGuest('.auth-guest');
+            showForAdmin('.auth-admin');
         }
-        
-        async function addToCart(productId) {
+          async function addToCart(productId) {
+            // Check if user is authenticated
+            if (!getToken()) {
+                showAlert('Please login to add items to cart', 'warning');
+                return;
+            }
+            
             try {
-                await API.addToCart(productId, 1);
+                const response = await API.addToCart(productId, 1);
+                console.log('Add to cart response:', response);
                 showAlert('Product added to cart!', 'success');
                 updateCartCount();
             } catch (error) {
                 console.error('Error adding to cart:', error);
-                showAlert('Error adding product to cart', 'danger');
+                if (error.message === 'Authentication required') {
+                    showAlert('Please login to add items to cart', 'warning');
+                } else {
+                    showAlert('Error adding product to cart', 'danger');
+                }
             }
         }
         

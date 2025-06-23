@@ -127,13 +127,12 @@ async function updateCartCount() {
     if (!isLoggedIn()) {
         document.getElementById('cart-count').textContent = '0';
         return;
-    }
-      try {
+    }    try {
         const response = await apiCall('/shoppingcart');
         if (response.ok) {
             const cart = await response.json();
-            const totalItems = cart && cart.Items && Array.isArray(cart.Items) 
-                ? cart.Items.reduce((sum, item) => sum + item.quantity, 0) 
+            const totalItems = cart && cart.items && Array.isArray(cart.items) 
+                ? cart.items.reduce((sum, item) => sum + item.quantity, 0) 
                 : 0;
             document.getElementById('cart-count').textContent = totalItems;
         }
@@ -166,6 +165,37 @@ function showForGuest(selector) {
     elements.forEach(el => {
         el.style.display = isLoggedIn() ? 'none' : 'block';
     });
+}
+
+// Role-based visibility functions
+function showForAdmin(selector) {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(el => {
+        el.style.display = isAdmin() ? 'block' : 'none';
+    });
+}
+
+function showForUser(selector) {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(el => {
+        el.style.display = (isLoggedIn() && !isAdmin()) ? 'block' : 'none';
+    });
+}
+
+// Check if current user is admin
+function isAdmin() {
+    const token = getToken();
+    if (!token) return false;
+    
+    try {
+        // Decode JWT token to check for admin role
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const roles = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+        return roles && (roles === 'Admin' || (Array.isArray(roles) && roles.includes('Admin')));
+    } catch (error) {
+        console.error('Error checking admin role:', error);
+        return false;
+    }
 }
 
 // Utility functions for API calls
