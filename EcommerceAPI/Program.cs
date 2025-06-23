@@ -17,7 +17,7 @@ builder.Services.AddSwaggerGen(); // Add Swagger generation
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure ASP.NET Core Identity
+// Configure ASP.NET Core Identity with Role Management
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     // Password requirements - can be customized for your needs
@@ -36,12 +36,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>() // Use EF Core for Identity data
-.AddDefaultTokenProviders(); // Enable token generation for password resets, etc.
+.AddDefaultTokenProviders() // Enable token generation for password resets, etc.
+.AddRoles<IdentityRole>(); // Enable role management
 
 // Configure JWT Authentication
-var jwtSecret = builder.Configuration["JWT:Secret"];
-var jwtIssuer = builder.Configuration["JWT:Issuer"];
-var jwtAudience = builder.Configuration["JWT:Audience"];
+var jwtSecret = builder.Configuration["JWT:Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured");
+var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not configured");
+var jwtAudience = builder.Configuration["JWT:Audience"] ?? throw new InvalidOperationException("JWT Audience is not configured");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -65,6 +66,23 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
+
+// Seed database with roles and default admin user
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        await DbInitializer.SeedAsync(userManager, roleManager);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

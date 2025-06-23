@@ -94,9 +94,9 @@
     - [x] Configure JWT secret and issuer in `appsettings.json`.
     - [x] Configure JWT Bearer authentication middleware in `Program.cs`.
     - [x] Create `AuthController.cs` with custom `Register` and `Login` endpoints that generate JWTs.
-- [ ] **Step 2.3: Implement and Seed User Roles**
-    - [ ] Enable role management via `AddRoles<IdentityRole>()`.
-    - [ ] Create a `DbInitializer` class to seed "Admin" and "User" roles and create a default admin user on application startup.
+- [x] **Step 2.3: Implement and Seed User Roles**
+    - [x] Enable role management via `AddRoles<IdentityRole>()`.
+    - [x] Create a `DbInitializer` class to seed "Admin" and "User" roles and create a default admin user on application startup.
 - [ ] **Step 2.4: Secure Endpoints**
     - [ ] Apply `[Authorize]` and `[Authorize(Roles = "Admin")]` attributes to controllers and actions.
 
