@@ -131,17 +131,20 @@ namespace EcommerceAPI.Controllers
         private string? GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        }
-
-        public IActionResult Index()
+        }        /// <summary>
+        /// Get checkout information and available options
+        /// </summary>
+        /// <returns>Checkout information</returns>
+        [HttpGet("info")]
+        public IActionResult GetCheckoutInfo()
         {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View("Error!");
+            return Ok(new { 
+                message = "Checkout API ready", 
+                availableEndpoints = new[] { 
+                    "POST /api/checkout/create-session - Create Stripe checkout session",
+                    "GET /api/checkout/session/{sessionId} - Get session details" 
+                }
+            });
         }
     }
 }
