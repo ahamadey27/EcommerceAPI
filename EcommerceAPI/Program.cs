@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using EcommerceAPI.Data;
 using EcommerceAPI.Models;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
+
+// Configure Stripe
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // Seed database with roles and default admin user
 using (var scope = app.Services.CreateScope())

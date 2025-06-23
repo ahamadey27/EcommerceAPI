@@ -28,14 +28,18 @@ namespace EcommerceAPI.Models
 
         //Order Status for tracking fulfillment
         [MaxLength(50)]
-        public string OrderStatus { get; set; } = "Pending";
-
-        //Stripe payment session ID for tracking
+        public string OrderStatus { get; set; } = "Pending";        //Stripe payment session ID for tracking
         [MaxLength(200)]
         public string? StripeSessionId { get; set; }
 
         //All items in order
-        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>(); 
+        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+        // Additional Stripe properties
+        public string? PaymentIntentId { get; set; }
+        public string? CustomerEmail { get; set; }
+        public string? BillingAddress { get; set; }
+        public string Status { get; set; } = "Pending";
 
     }
 }

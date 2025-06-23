@@ -119,10 +119,10 @@
     - [x] Create an endpoint to generate a Stripe `SessionCreateOptions` object from the user's cart.
     - [x] Set the `ClientReferenceId` to the application's `UserId` to link the transaction.
     - [x] Return the Stripe Checkout Session URL to the client.
-- [ ] **Step 4.3: Implement Order Fulfillment via Webhooks (`WebhookController.cs`)**
-    - [ ] Create a public endpoint to receive webhook events from Stripe.
-    - [ ] Implement webhook signature verification using the `WebhookSecret` for security.
-    - [ ] Handle the `checkout.session.completed` event to create a new `Order`, clear the user's `ShoppingCart`, and save to the database.
+- [x] **Step 4.3: Implement Order Fulfillment via Webhooks (`WebhookController.cs`)**
+    - [x] Create a public endpoint to receive webhook events from Stripe.
+    - [x] Implement webhook signature verification using the `WebhookSecret` for security.
+    - [x] Handle the `checkout.session.completed` event to create a new `Order`, clear the user's `ShoppingCart`, and save to the database.
 
 ## Phase 5: Deployment, Testing, and Frontend Interaction
 - [ ] **Step 5.1: Provision and Configure Azure Resources**
