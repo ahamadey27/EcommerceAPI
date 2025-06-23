@@ -36,6 +36,10 @@ namespace EcommerceAPI.Models
         // Navigation properties - products can be in many cart items and order items
         public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+        // Product category for organization and filtering
+        [MaxLength(100)]
+        public string Category { get; set; } = string.Empty;
     }
 
     
