@@ -101,11 +101,11 @@
     - [x] Apply `[Authorize]` and `[Authorize(Roles = "Admin")]` attributes to controllers and actions.
 
 ## Phase 3: Core E-Commerce API Endpoints
-- [ ] **Step 3.1: Build Product Management Controller (`ProductsController.cs`)**
-    - [ ] Implement secure CRUD endpoints (POST, GET, PUT, DELETE) for products, restricted to "Admin" role.
-    - [ ] Use DTOs to prevent over-posting.
-- [ ] **Step 3.2: Implement Public Catalog Endpoints**
-    - [ ] Add `[AllowAnonymous]` endpoints to `ProductsController` for public product viewing and searching.
+- [x] **Step 3.1: Build Product Management Controller (`ProductsController.cs`)**
+    - [x] Implement secure CRUD endpoints (POST, GET, PUT, DELETE) for products, restricted to "Admin" role.
+    - [x] Use DTOs to prevent over-posting.
+- [x] **Step 3.2: Implement Public Catalog Endpoints**
+    - [x] Add `[AllowAnonymous]` endpoints to `ProductsController` for public product viewing and searching.
 - [ ] **Step 3.3: Build Shopping Cart Controller (`ShoppingCartController.cs`)**
     - [ ] Secure the controller with `[Authorize]`.
     - [ ] Implement logic to get, add to, and remove from the cart of the currently authenticated user (identified via JWT claims).
