@@ -123,3 +123,35 @@ GET {{EcommerceAPI_HostAddress}}/api/checkout/info
 Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
 
 ###
+
+### 13. Create checkout session
+POST {{EcommerceAPI_HostAddress}}/api/checkout/create-session
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+
+###
+
+### 14. Test webhook endpoint (simulate Stripe webhook)
+POST {{EcommerceAPI_HostAddress}}/api/webhook/stripe
+Content-Type: application/json
+Stripe-Signature: test
+
+{
+  "id": "evt_test_webhook",
+  "object": "event",
+  "type": "checkout.session.completed",
+  "data": {
+    "object": {
+      "id": "cs_test_123",
+      "object": "checkout.session",
+      "amount_total": 35997,
+      "currency": "usd",
+      "client_reference_id": "c20bfcc3-ba80-4846-b597-2eb589b7291d",
+      "payment_status": "paid",
+      "customer_details": {
+        "email": "john.customer@test.com"
+      }
+    }
+  }
+}
+
+###
