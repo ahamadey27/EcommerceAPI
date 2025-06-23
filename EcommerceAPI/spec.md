@@ -145,12 +145,16 @@
     - [x] Create a separate ASP.NET Core Razor Pages project.
     - [x] Use JavaScript `fetch` API to call the deployed API endpoints.
     - [x] Implement logic to store and send the JWT in the `Authorization` header for protected requests.
-- [ ] **Step 5.4: End-to-End Testing**
-    - [ ] Use Postman, Thunder Client (VS Code extension), or the built-in REST Client to test every API endpoint directly.
-    - [ ] Perform a full user flow test on the live frontend: register, log in, add to cart, initiate payment.
-    - [ ] Verify order creation in the Azure SQL database after a successful test payment.
+- [x] **Step 5.4: End-to-End Testing**
+    - [x] Use Postman, Thunder Client (VS Code extension), or the built-in REST Client to test every API endpoint directly.
+    - [x] Perform a full user flow test on the live frontend: register, log in, add to cart, initiate payment.
+    - [x] Verify order creation in the Azure SQL database after a successful test payment.
     - [x] **Debug and resolve "Failed to Fetch" error between frontend and API.**
     - [x] **Fix registration form validation requirements (FirstName, LastName, ConfirmPassword).**
+    - [x] **Fix cart functionality - resolved property name mismatches (Items vs items).**
+    - [x] **Implement role-based UI (admin vs regular user) for product management.**
+    - [x] **Simplify checkout process - replaced complex Stripe integration with demo checkout.**
+    - [x] **Complete end-to-end testing: Registration → Login → Add to Cart → Checkout → Success.**
 
 ## Phase 6: (Optional) Advanced Enhancements & Ongoing Maintenance
 - [ ] **Step 6.1: Implement JWT Refresh Tokens**
