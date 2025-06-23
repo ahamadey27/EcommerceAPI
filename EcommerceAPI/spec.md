@@ -81,9 +81,9 @@
     - [x] Register the `DbContext` in `Program.cs` and configure the connection string.
 - [x] **Step 1.4: Define Entity Relationships**
     - [x] Use the Fluent API in `OnModelCreating` to configure one-to-many and one-to-one relationships.
-- [ ] **Step 1.5: Create Database with Migrations**
-    - [ ] Run `add-migration InitialCreate`.
-    - [ ] Run `update-database` to generate the SQL schema.
+- [x] **Step 1.5: Create Database with Migrations**
+    - [x] Run `add-migration InitialCreate`.
+    - [x] Run `update-database` to generate the SQL schema.
 
 ## Phase 2: Secure Authentication and Authorization
 - [ ] **Step 2.1: Integrate ASP.NET Core Identity**
