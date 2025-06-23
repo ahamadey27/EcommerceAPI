@@ -14,8 +14,8 @@ using EcommerceAPI.Models;
 namespace EcommerceAPI.Controllers
 {
     /// <summary>
-    /// Controller for handling Stripe checkout process
-    /// Converts shopping cart to Stripe payment session
+    /// Controller for handling simplified checkout process
+    /// Creates orders directly from shopping cart without external payment processing
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -23,22 +23,20 @@ namespace EcommerceAPI.Controllers
     public class CheckoutController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<CheckoutController> _logger;
 
-        public CheckoutController(ApplicationDbContext context, IConfiguration configuration, ILogger<CheckoutController> logger)
+        public CheckoutController(ApplicationDbContext context, ILogger<CheckoutController> logger)
         {
             _context = context;
-            _configuration = configuration;
             _logger = logger;
         }
 
         /// <summary>
-        /// Create Stripe checkout session from user's cart
-        /// POST: api/checkout/create-session
+        /// Create order directly from user's cart (simplified demo checkout)
+        /// POST: api/checkout/create-order
         /// </summary>
-        [HttpPost("create-session")]
-        public async Task<ActionResult<CheckoutSessionResponseDto>> CreateCheckoutSession()
+        [HttpPost("create-order")]
+        public async Task<ActionResult<CheckoutSessionResponseDto>> CreateOrder()
         {
             var userId = GetCurrentUserId();
             if (userId == null)
@@ -53,97 +51,99 @@ namespace EcommerceAPI.Controllers
             if (cart == null || !cart.CartItems.Any())
                 return BadRequest("Shopping cart is empty.");
 
-            // Create Stripe line items from cart
-            var lineItems = cart.CartItems.Select(ci => new SessionLineItemOptions
-            {
-                PriceData = new SessionLineItemPriceDataOptions
-                {
-                    UnitAmount = (long)(ci.Product.Price * 100), // Stripe uses cents
-                    Currency = "usd",
-                    ProductData = new SessionLineItemPriceDataProductDataOptions
-                    {
-                        Name = ci.Product.Name,
-                        Description = ci.Product.Description,
-                        Images = ci.Product.ImageUrl != null ? new List<string> { ci.Product.ImageUrl } : null,
-                    },
-                },
-                Quantity = ci.Quantity,
-            }).ToList();
+            // Calculate total
+            var totalAmount = cart.CartItems.Sum(ci => ci.Product.Price * ci.Quantity);
 
-            // Configure checkout session options
-            var options = new SessionCreateOptions
+            // Create order
+            var order = new Order
             {
-                PaymentMethodTypes = new List<string> { "card" },
-                LineItems = lineItems,
-                Mode = "payment",
-                ClientReferenceId = userId, // Link payment to user
-                SuccessUrl = _configuration["Stripe:SuccessUrl"] ?? "http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}",
-                CancelUrl = _configuration["Stripe:CancelUrl"] ?? "http://localhost:3000/cancel",
-                CustomerEmail = User.FindFirst(ClaimTypes.Email)?.Value,
-                BillingAddressCollection = "required",
-                ShippingAddressCollection = new SessionShippingAddressCollectionOptions
-                {
-                    AllowedCountries = new List<string> { "US", "CA" },
-                },
+                UserId = userId,
+                OrderDate = DateTime.UtcNow,
+                TotalAmount = totalAmount,
+                ShippingAddress = "Demo Address - 123 Main St, City, State 12345",
+                OrderStatus = "Pending",
+                Status = "Completed", // For demo purposes
+                CustomerEmail = User.FindFirst(ClaimTypes.Email)?.Value
             };
 
-            // Create the session
-            var service = new SessionService();
-            var session = await service.CreateAsync(options);
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            // Create order items
+            var orderItems = cart.CartItems.Select(ci => new OrderItem
+            {
+                OrderId = order.Id,
+                ProductId = ci.ProductId,
+                Quantity = ci.Quantity,
+                Price = ci.Product.Price
+            }).ToList();
+
+            _context.OrderItems.AddRange(orderItems);
+
+            // Clear the cart
+            _context.CartItems.RemoveRange(cart.CartItems);
+            
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation($"Order {order.Id} created successfully for user {userId}");
 
             return Ok(new CheckoutSessionResponseDto
             {
-                SessionId = session.Id,
-                CheckoutUrl = session.Url,
-                PublishableKey = _configuration["Stripe:PublishableKey"]!
+                SessionId = order.Id.ToString(),
+                CheckoutUrl = $"/success?orderId={order.Id}",
+                PublishableKey = "demo-checkout-completed"
             });
         }
 
         /// <summary>
-        /// Get checkout session details
-        /// GET: api/checkout/session/{sessionId}
+        /// Get order details
+        /// GET: api/checkout/order/{orderId}
         /// </summary>
-        [HttpGet("session/{sessionId}")]
-        public async Task<ActionResult<CheckoutSessionDetailsDto>> GetCheckoutSession(string sessionId)
+        [HttpGet("order/{orderId}")]
+        public async Task<ActionResult<CheckoutSessionDetailsDto>> GetOrderDetails(int orderId)
         {
-            try
-            {
-                var service = new SessionService();
-                var session = await service.GetAsync(sessionId);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized();
 
-                return Ok(new CheckoutSessionDetailsDto
-                {
-                    SessionId = session.Id,
-                    PaymentStatus = session.PaymentStatus,
-                    PaymentIntentId = session.PaymentIntentId,
-                    AmountTotal = session.AmountTotal,
-                    Currency = session.Currency,
-                    CustomerEmail = session.CustomerEmail
-                });
-            }
-            catch (Exception ex)
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+
+            if (order == null)
+                return NotFound("Order not found.");
+
+            return Ok(new CheckoutSessionDetailsDto
             {
-                return BadRequest($"Invalid session ID: {ex.Message}");
-            }
+                SessionId = order.Id.ToString(),
+                PaymentStatus = "succeeded",
+                PaymentIntentId = $"demo_pi_{order.Id}",
+                AmountTotal = (long)(order.TotalAmount * 100), // Convert to cents for consistency
+                Currency = "usd",
+                CustomerEmail = order.CustomerEmail
+            });
+        }
+
+        /// <summary>
+        /// Get checkout information and available options
+        /// GET: api/checkout/info
+        /// </summary>
+        [HttpGet("info")]
+        public IActionResult GetCheckoutInfo()
+        {
+            return Ok(new { 
+                message = "Simplified Demo Checkout API ready", 
+                availableEndpoints = new[] { 
+                    "POST /api/checkout/create-order - Create order directly from cart",
+                    "GET /api/checkout/order/{orderId} - Get order details" 
+                }
+            });
         }
 
         private string? GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        }        /// <summary>
-        /// Get checkout information and available options
-        /// </summary>
-        /// <returns>Checkout information</returns>
-        [HttpGet("info")]
-        public IActionResult GetCheckoutInfo()
-        {
-            return Ok(new { 
-                message = "Checkout API ready", 
-                availableEndpoints = new[] { 
-                    "POST /api/checkout/create-session - Create Stripe checkout session",
-                    "GET /api/checkout/session/{sessionId} - Get session details" 
-                }
-            });
         }
     }
 }

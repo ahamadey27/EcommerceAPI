@@ -6,7 +6,6 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using EcommerceAPI.Data;
 using EcommerceAPI.Models;
-using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
