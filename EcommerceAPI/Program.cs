@@ -111,12 +111,27 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Seed database with roles and default admin user
-using (var scope = app.Services.CreateScope())
+// Ensure database is created and migrate
+try
 {
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await DbInitializer.SeedAsync(userManager, roleManager);
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        // Ensure database is created
+        context.Database.EnsureCreated();
+        
+        // Seed database with roles and default admin user
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        await DbInitializer.SeedAsync(userManager, roleManager);
+    }
+}
+catch (Exception ex)
+{
+    // Log the error but don't crash the app
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "An error occurred during database initialization");
 }
 
 // Configure the HTTP request pipeline
