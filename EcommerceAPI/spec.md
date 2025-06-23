@@ -115,10 +115,10 @@
 - [x] **Step 4.1: Integrate Stripe Payment Gateway**
     - [x] Install NuGet package: `Stripe.net`.
     - [x] Configure Stripe API keys in `appsettings.json` and initialize in `Program.cs`.
-- [ ] **Step 4.2: Implement Stripe Checkout Flow (`CheckoutController.cs`)**
-    - [ ] Create an endpoint to generate a Stripe `SessionCreateOptions` object from the user's cart.
-    - [ ] Set the `ClientReferenceId` to the application's `UserId` to link the transaction.
-    - [ ] Return the Stripe Checkout Session URL to the client.
+- [x] **Step 4.2: Implement Stripe Checkout Flow (`CheckoutController.cs`)**
+    - [x] Create an endpoint to generate a Stripe `SessionCreateOptions` object from the user's cart.
+    - [x] Set the `ClientReferenceId` to the application's `UserId` to link the transaction.
+    - [x] Return the Stripe Checkout Session URL to the client.
 - [ ] **Step 4.3: Implement Order Fulfillment via Webhooks (`WebhookController.cs`)**
     - [ ] Create a public endpoint to receive webhook events from Stripe.
     - [ ] Implement webhook signature verification using the `WebhookSecret` for security.
