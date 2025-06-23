@@ -150,15 +150,47 @@
                 console.error('Error removing item:', error);
                 showAlert('Error removing item from cart', 'danger');
             }
-        }
-        
-        async function proceedToCheckout() {
+        }        async function proceedToCheckout() {
             try {
-                const session = await API.createCheckoutSession();
-                // Redirect to Stripe Checkout
-                window.location.href = session.url;
+                console.log('Starting simplified checkout process...');
+                
+                // Get cart total and item count for confirmation
+                const totalAmount = cart.items.reduce((sum, item) => sum + (item.productPrice * item.quantity), 0);
+                const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+                
+                // Show confirmation dialog
+                const confirmed = confirm(`Proceed with checkout?\n\nTotal Items: ${totalItems}\nTotal Amount: $${totalAmount.toFixed(2)}\n\nNote: This is a demo - no actual payment will be processed.`);
+                
+                if (!confirmed) {
+                    return;
+                }
+                
+                // Simulate order processing
+                showAlert('Processing order...', 'info');
+                
+                // Clear the cart after a short delay to simulate processing
+                setTimeout(async () => {
+                    try {
+                        // Clear cart items (you could also call an API to create an order record)
+                        for (const item of cart.items) {
+                            await API.removeFromCart(item.productId);
+                        }
+                        
+                        // Show success message
+                        showAlert(`Order completed successfully! Total: $${totalAmount.toFixed(2)}. Thank you for your purchase!`, 'success');
+                        
+                        // Reload cart to show it's empty
+                        await loadCart();
+                        updateCartCount();
+                        
+                    } catch (error) {
+                        console.error('Error processing order:', error);
+                        showAlert('Error processing order. Please try again.', 'danger');
+                    }
+                }, 1500);
+                
             } catch (error) {
-                console.error('Error creating checkout session:', error);
+                console.error('Error during checkout:', error);
                 showAlert('Error starting checkout. Please try again.', 'danger');
             }
         }

@@ -231,12 +231,19 @@ const API = {
         });
         return response.ok;
     },
-    
-    // Checkout
+      // Checkout
     async createCheckoutSession() {
+        console.log('API.createCheckoutSession called');
+        console.log('API_BASE_URL:', API_BASE_URL);
         const response = await apiCall('/checkout/create-session', {
             method: 'POST'
         });
+        console.log('Checkout response:', response);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Checkout API error:', response.status, errorText);
+            throw new Error(`Checkout failed: ${response.status} - ${errorText}`);
+        }
         return response.json();
     }
 };
