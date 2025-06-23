@@ -108,8 +108,8 @@
     - [x] Add `[AllowAnonymous]` endpoints to `ProductsController` for public product viewing and searching.
 - [x] **Step 3.3: Build Shopping Cart Controller (`ShoppingCartController.cs`)**
     - [x] Secure the controller with `[Authorize]`.
-    - [ ] Implement logic to get, add to, and remove from the cart of the currently authenticated user (identified via JWT claims).
-    - [ ] Implement on-the-fly cart creation for new users.
+    - [x] Implement logic to get, add to, and remove from the cart of the currently authenticated user (identified via JWT claims).
+    - [x] Implement on-the-fly cart creation for new users.
 
 ## Phase 4: Payment Processing and Order Fulfillment
 - [ ] **Step 4.1: Integrate Stripe Payment Gateway**
