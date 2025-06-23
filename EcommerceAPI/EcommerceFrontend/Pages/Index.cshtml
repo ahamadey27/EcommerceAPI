@@ -1,0 +1,55 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to Our Store!</h1>
+    <p class="lead">Discover amazing products at great prices</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Browse Products</h5>
+                    <p class="card-text">Explore our extensive catalog of products</p>
+                    <a href="/Products" class="btn btn-primary">Shop Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Your Cart</h5>
+                    <p class="card-text">Review and manage your selected items</p>
+                    <a href="/Cart" class="btn btn-outline-primary">View Cart</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Account</h5>
+                    <p class="card-text">Login or create an account to get started</p>
+                    <div class="auth-guest">
+                        <a href="/Login" class="btn btn-success me-2">Login</a>
+                        <a href="/Register" class="btn btn-outline-success">Register</a>
+                    </div>
+                    <div class="auth-user">
+                        <p class="text-success">Welcome back!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showForAuth('.auth-user');
+            showForGuest('.auth-guest');
+        });
+    </script>
+}
