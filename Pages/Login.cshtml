@@ -1,42 +1,56 @@
 @page
 @{
     Layout = null;
-    ViewData["Title"] = "Standalone Login Test";
+    ViewData["Title"] = "Login";
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Standalone Login Test</title>
+    <title>Login</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f8f9fa; }
-        .container { max-width: 400px; margin: 60px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+        .container { max-width: 400px; margin: 60px auto; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+        .card-header { background: #007bff; color: #fff; border-radius: 8px 8px 0 0; padding: 16px 0; text-align: center; }
+        .card-title { margin: 0; font-size: 1.5rem; }
         .debug-panel { font-size:12px; background:#f8f9fa; border:1px solid #ccc; padding:8px; margin-bottom:10px; display:none; }
         .alert { padding: 8px 12px; border-radius: 4px; margin-bottom: 10px; }
         .alert-success { background: #d4edda; color: #155724; }
         .alert-danger { background: #f8d7da; color: #721c24; }
+        .form-label { font-weight: bold; margin-bottom: 4px; display: block; }
+        .form-control { width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-primary { background: #007bff; color: #fff; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        .btn-primary:disabled { background: #6c757d; }
+        .text-center { text-align: center; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Standalone Login Test</h2>
-        <div id="alert-container"></div>
-        <div id="debug-panel" class="debug-panel"></div>
-        <form id="login-form">
-            <div class="mb-3">
-                <label for="email">Email</label>
-                <input type="email" id="email" class="form-control" required style="width:100%">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Login</h3>
             </div>
-            <div class="mb-3">
-                <label for="password">Password</label>
-                <input type="password" id="password" class="form-control" required style="width:100%">
+            <div class="card-body">
+                <div id="alert-container"></div>
+                <div id="debug-panel" class="debug-panel"></div>
+                <form id="login-form">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-control" required>
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" required>
+                    <button type="submit" id="login-btn" class="btn btn-primary" style="width:100%">Login</button>
+                </form>
+                <div class="text-center" style="margin-top:16px;">
+                    <p class="mb-0">Don't have an account? <a href="/Register">Register here</a></p>
+                </div>
             </div>
-            <button type="submit" id="login-btn" class="btn btn-primary" style="width:100%">Login</button>
-        </form>
+        </div>
     </div>
     <script>
-    alert('Standalone JS loaded!');
     document.addEventListener('DOMContentLoaded', function () {
         const loginForm = document.getElementById('login-form');
         const alertContainer = document.getElementById('alert-container');
