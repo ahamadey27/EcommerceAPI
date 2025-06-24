@@ -47,7 +47,26 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav" id="auth-nav">
-                        <!-- Will be populated by JavaScript -->
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link">Hello, @User.Identity.Name!</span>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post" asp-area="" asp-page="/Logout">
+                                    <button type="submit" class="nav-link btn btn-link" style="display:inline; padding:0;">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/Register">Register</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
