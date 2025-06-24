@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+builder.Services.AddRazorPages(); // Add Razor Pages support
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure CORS
@@ -125,10 +126,12 @@ if (!app.Environment.IsProduction())
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles(); // Serve static files
 app.MapControllers();
+app.MapRazorPages(); // Map Razor Pages
 
-// Health check endpoints
-app.MapGet("/", () => Results.Json(new { 
+// Health check endpoints  
+app.MapGet("/api", () => Results.Json(new { 
     Message = "E-Commerce API is running!", 
     Documentation = "/swagger",
     Health = "/health",

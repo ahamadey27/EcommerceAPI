@@ -1,0 +1,39 @@
+@page
+@model SuccessModel
+@{
+    ViewData["Title"] = "Order Successful";
+}
+
+<div class="text-center">
+    <div class="mb-4">
+        <i class="text-success" style="font-size: 4rem;">✅</i>
+    </div>
+    
+    <h1 class="text-success">Order Successful!</h1>
+    <p class="lead">Thank you for your purchase. Your order has been processed successfully.</p>
+    
+    <div class="alert alert-info mt-4">
+        <h5>What happens next?</h5>
+        <ul class="list-unstyled">
+            <li>• You will receive an email confirmation shortly</li>
+            <li>• Your order is being prepared for shipment</li>
+            <li>• You'll receive tracking information once shipped</li>
+        </ul>
+    </div>
+    
+    <div class="mt-4">
+        <a href="/Products" class="btn btn-primary me-3">Continue Shopping</a>
+        <a href="/" class="btn btn-outline-primary">Back to Home</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Update cart count since cart was cleared after successful checkout
+        document.addEventListener('DOMContentLoaded', function() {
+            if (isLoggedIn()) {
+                updateCartCount();
+            }
+        });
+    </script>
+}
