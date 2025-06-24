@@ -9,6 +9,13 @@ using EcommerceAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure for Railway deployment
+builder.WebHost.ConfigureKestrel(options =>
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+    options.ListenAnyIP(int.Parse(port));
+});
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddRazorPages(); // Add Razor Pages support
@@ -20,10 +27,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("https://localhost:7045", "http://localhost:5045", "https://ecommerceapi.azurewebsites.net")
+            .AllowAnyOrigin() // Allow all origins for Railway deployment
             .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowAnyMethod();
     });
 });
 
