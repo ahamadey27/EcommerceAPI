@@ -90,15 +90,14 @@
             
             // Clear previous alerts
             alertContainer.innerHTML = '';
-            
-            // Validation
+              // Validation
             if (password !== confirmPassword) {
-                showAlert('Passwords do not match', 'danger');
+                window.showAlert('Passwords do not match', 'danger');
                 return;
             }
             
             if (password.length < 6) {
-                showAlert('Password must be at least 6 characters long', 'danger');
+                window.showAlert('Password must be at least 6 characters long', 'danger');
                 return;
             }
             
@@ -107,32 +106,25 @@
             spinner.classList.remove('d-none');
             
             try {
+                console.log('Attempting registration for:', email);
                 const result = await register(firstName, lastName, email, password, confirmPassword);
+                console.log('Registration result:', result);
                 
                 if (result.success) {
-                    showAlert('Registration successful! Redirecting...', 'success');
+                    window.showAlert('Registration successful! Redirecting...', 'success');
                     setTimeout(() => {
                         window.location.href = '/Products';
                     }, 1500);
                 } else {
-                    showAlert(result.error, 'danger');
+                    window.showAlert(result.error || 'Registration failed', 'danger');
                 }
             } catch (error) {
-                showAlert('Registration failed. Please try again.', 'danger');
+                console.error('Registration error:', error);
+                window.showAlert('Registration failed. Please try again.', 'danger');
             } finally {
                 btn.disabled = false;
                 spinner.classList.add('d-none');
             }
         });
-        
-        function showAlert(message, type) {
-            const alertContainer = document.getElementById('alert-container');
-            alertContainer.innerHTML = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-        }
     </script>
 }

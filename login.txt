@@ -1,0 +1,9 @@
+Admin User:
+
+Email: admin@ecommerce.com
+Password: Admin123!
+
+Test User:
+
+Email: test@example.com
+Password: Test123!

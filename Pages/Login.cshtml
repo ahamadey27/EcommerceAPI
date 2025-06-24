@@ -67,32 +67,25 @@
             spinner.classList.remove('d-none');
             
             try {
+                console.log('Attempting login for:', email);
                 const result = await login(email, password);
+                console.log('Login result:', result);
                 
                 if (result.success) {
-                    showAlert('Login successful! Redirecting...', 'success');
+                    window.showAlert('Login successful! Redirecting...', 'success');
                     setTimeout(() => {
                         window.location.href = '/Products';
                     }, 1500);
                 } else {
-                    showAlert(result.error, 'danger');
+                    window.showAlert(result.error || 'Login failed', 'danger');
                 }
             } catch (error) {
-                showAlert('Login failed. Please try again.', 'danger');
+                console.error('Login error:', error);
+                window.showAlert('Login failed. Please try again.', 'danger');
             } finally {
                 btn.disabled = false;
                 spinner.classList.add('d-none');
             }
         });
-        
-        function showAlert(message, type) {
-            const alertContainer = document.getElementById('alert-container');
-            alertContainer.innerHTML = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-        }
     </script>
 }
