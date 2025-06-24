@@ -6,9 +6,9 @@ nixPkgs = ["dotnet-sdk_8"]
 
 [phases.build]
 cmds = [
-    "dotnet restore",
-    "dotnet build -c Release --no-restore",
-    "dotnet publish -c Release -o out --no-restore"
+    "dotnet restore EcommerceAPI.csproj",
+    "dotnet build EcommerceAPI.csproj -c Release --no-restore",
+    "dotnet publish EcommerceAPI.csproj -c Release -o out --no-restore /p:UseAppHost=false"
 ]
 
 [phases.start]

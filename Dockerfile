@@ -3,12 +3,12 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /source
 
 # Copy project file and restore dependencies
-COPY *.csproj .
-RUN dotnet restore
+COPY EcommerceAPI.csproj .
+RUN dotnet restore EcommerceAPI.csproj
 
-# Copy everything else and build
+# Copy everything else and build the project (not solution)
 COPY . .
-RUN dotnet publish -c Release -o /app --no-restore
+RUN dotnet publish EcommerceAPI.csproj -c Release -o /app --no-restore /p:UseAppHost=false
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0

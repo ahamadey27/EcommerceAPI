@@ -7,16 +7,24 @@
 error MSB3024: Could not copy the file "/src/obj/Release/net8.0/apphost" to the destination file "/app/build/EcommerceAPI", because the destination is a folder instead of a file.
 ```
 
+**Additional Error**: 
+```
+warning NETSDK1194: The "--output" option isn't supported when building a solution. Specifying a solution-level output path results in all projects copying outputs to the same directory.
+```
+
 **Root Cause**: 
+- Docker build was targeting solution file (.sln) instead of project file (.csproj)
 - Malformed project file (EcommerceAPI.csproj) with formatting issues
+- Missing UseAppHost=false parameter causing apphost conflicts
 - Docker build process conflict with directory structure
-- Missing proper build configuration
 
 ## ✅ **Solutions Applied**
 
-### 1. **Fixed Project File**
+### 1. **Fixed Project File & Build Process**
 - Cleaned up malformed XML in `EcommerceAPI.csproj`
 - Removed `GenerateAssemblyInfo=false` which was causing issues
+- **Fixed Docker to target project file**: Now uses `EcommerceAPI.csproj` instead of solution
+- **Added UseAppHost=false**: Prevents apphost file conflicts
 - Proper XML formatting and structure
 
 ### 2. **Updated Railway Configuration**
@@ -24,12 +32,14 @@ We provide two deployment approaches:
 
 #### **Option A: Nixpacks (Recommended)**
 - Updated `railway.json` to use `NIXPACKS` builder
-- Created `nixpacks.toml` for .NET 8 configuration
+- Created `nixpacks.toml` for .NET 8 configuration targeting project file
+- Uses `dotnet publish EcommerceAPI.csproj` with proper parameters
 - Simpler build process, better Railway integration
 
-#### **Option B: Docker (Alternative)**
-- Fixed `Dockerfile` with proper multi-stage build
-- Simplified build commands
+#### **Option B: Docker (Fixed)**
+- Fixed `Dockerfile` to target `EcommerceAPI.csproj` specifically
+- Added `/p:UseAppHost=false` to prevent apphost conflicts
+- Simplified build commands with proper project targeting
 - Better directory structure handling
 
 ### 3. **Environment Configuration**
