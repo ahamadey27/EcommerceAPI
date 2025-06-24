@@ -1,5 +1,6 @@
 // Authentication and API utilities
-const API_BASE_URL = 'http://localhost:5000/api';
+// Dynamic API base URL - works for both local development and production
+const API_BASE_URL = window.location.origin + '/api';
 
 // Token management
 const getToken = () => localStorage.getItem('jwt_token');
@@ -107,16 +108,22 @@ function updateNavigation() {
     if (isLoggedIn()) {
         authNav.innerHTML = `
             <li class="nav-item">
-                <a class="nav-link text-dark" href="#" onclick="logout()">Logout</a>
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
             </li>
         `;
     } else {
         authNav.innerHTML = `
             <li class="nav-item">
-                <a class="nav-link text-dark" href="/Login">Login</a>
+                <a class="nav-link" href="/Login">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-dark" href="/Register">Register</a>
+                <a class="nav-link" href="/Register">
+                    <i class="fas fa-user-plus me-2"></i>Register
+                </a>
             </li>
         `;
     }
