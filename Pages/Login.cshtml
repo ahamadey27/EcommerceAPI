@@ -1,106 +1,56 @@
 @page
 @{
-    Layout = null;
     ViewData["Title"] = "Login";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f8f9fa; }
-        .container { max-width: 400px; margin: 60px auto; }
-        .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
-        .card-header { background: #007bff; color: #fff; border-radius: 8px 8px 0 0; padding: 16px 0; text-align: center; }
-        .card-title { margin: 0; font-size: 1.5rem; }
-        .debug-panel { font-size:12px; background:#f8f9fa; border:1px solid #ccc; padding:8px; margin-bottom:10px; display:none; }
-        .alert { padding: 8px 12px; border-radius: 4px; margin-bottom: 10px; }
-        .alert-success { background: #d4edda; color: #155724; }
-        .alert-danger { background: #f8d7da; color: #721c24; }
-        .form-label { font-weight: bold; margin-bottom: 4px; display: block; }
-        .form-control { width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-primary { background: #007bff; color: #fff; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-        .btn-primary:disabled { background: #6c757d; }
-        .text-center { text-align: center; }
-        a { color: #007bff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Login</h3>
-            </div>
-            <div class="card-body">
-                <div id="alert-container"></div>
-                <div id="debug-panel" class="debug-panel"></div>
-                <form id="login-form">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input type="email" id="email" class="form-control" required>
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" class="form-control" required>
-                    <button type="submit" id="login-btn" class="btn btn-primary" style="width:100%">Login</button>
-                </form>
-                <div class="text-center" style="margin-top:16px;">
-                    <p class="mb-0">Don't have an account? <a href="/Register">Register here</a></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const loginForm = document.getElementById('login-form');
-        const alertContainer = document.getElementById('alert-container');
-        const debugPanel = document.getElementById('debug-panel');
-        let apiBase = window.location.origin + '/api/auth/login';
-        function showDebug(msg) {
-            if (debugPanel) {
-                debugPanel.style.display = 'block';
-                debugPanel.innerHTML += `<div>${new Date().toLocaleTimeString()} - ${msg}</div>`;
-            }
-            console.log(msg);
-        }
-        if (loginForm) {
-            loginForm.addEventListener('submit', async function (e) {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                const btn = document.getElementById('login-btn');
-                btn.disabled = true;
-                if (alertContainer) alertContainer.innerHTML = '';
-                showDebug(`POST ${apiBase} with email=${email}`);
-                try {
-                    const response = await fetch(apiBase, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-                    let result;
-                    try { result = await response.json(); } catch { result = {}; }
-                    showDebug('API response: ' + JSON.stringify(result));
-                    if (response.ok && result.token) {
-                        localStorage.setItem('jwt_token', result.token);
-                        alertContainer.innerHTML = '<div class="alert alert-success">Login successful! Redirecting...</div>';
-                        showDebug('Login success, token stored.');
-                        setTimeout(() => { window.location.href = '/'; }, 1000);
-                    } else {
-                        let errorMsg = result.error || result.title || 'Login failed. Please check your credentials.';
-                        if (result.errors) errorMsg += '<br>' + Object.values(result.errors).flat().join('<br>');
-                        alertContainer.innerHTML = `<div class="alert alert-danger">${errorMsg}</div>`;
-                        showDebug('Login failed: ' + errorMsg);
-                    }
-                } catch (error) {
-                    alertContainer.innerHTML = `<div class="alert alert-danger">Unexpected error: ${error.message}</div>`;
-                    showDebug('JS error: ' + error.message);
-                } finally {
-                    btn.disabled = false;
+<h2>Login</h2>
+<div id="alert-container"></div>
+<form id="login-form">
+    <label for="email">Email</label><br>
+    <input type="email" id="email" required><br><br>
+    <label for="password">Password</label><br>
+    <input type="password" id="password" required><br><br>
+    <button type="submit" id="login-btn">Login</button>
+</form>
+
+@section Scripts {
+<script>
+console.log("Login JS loaded");
+document.addEventListener('DOMContentLoaded', function () {
+    const loginForm = document.getElementById('login-form');
+    const alertContainer = document.getElementById('alert-container');
+    let apiBase = window.location.origin + '/api/auth/login';
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true;
+            if (alertContainer) alertContainer.innerHTML = '';
+            try {
+                const response = await fetch(apiBase, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                let result;
+                try { result = await response.json(); } catch { result = {}; }
+                if (response.ok && result.token) {
+                    localStorage.setItem('jwt_token', result.token);
+                    alertContainer.innerHTML = '<div style="color:green;">Login successful! Redirecting...</div>';
+                    setTimeout(() => { window.location.href = '/'; }, 1000);
+                } else {
+                    let errorMsg = result.error || result.title || 'Login failed. Please check your credentials.';
+                    if (result.errors) errorMsg += '<br>' + Object.values(result.errors).flat().join('<br>');
+                    alertContainer.innerHTML = `<div style=\"color:red;\">${errorMsg}</div>`;
                 }
-            });
-        }
-    });
-    </script>
-</body>
-</html>
+            } catch (error) {
+                alertContainer.innerHTML = `<div style=\"color:red;\">Unexpected error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    }
+});
+</script>
+}
