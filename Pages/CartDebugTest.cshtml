@@ -1,0 +1,191 @@
+@page
+@{
+    ViewData["Title"] = "Cart Debug Test";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Cart Debug Test</h2>
+        </div>
+    </div>
+    
+    <div id="debug-log" style="background: #f8f9fa; padding: 15px; margin: 15px 0; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; border: 1px solid #ddd; white-space: pre-wrap;"></div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Manual Login Test</h5>
+                </div>
+                <div class="card-body">
+                    <button id="login-btn" class="btn btn-primary">Login as Admin</button>
+                    <button id="logout-btn" class="btn btn-secondary ms-2">Logout</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Cart Test</h5>
+                </div>
+                <div class="card-body">
+                    <button id="test-cart-btn" class="btn btn-success">Test Cart API</button>
+                    <button id="check-token-btn" class="btn btn-info ms-2">Check Token</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div id="cart-results" class="card">
+                <div class="card-header">
+                    <h5>Cart Results</h5>
+                </div>
+                <div class="card-body" id="cart-content">
+                    <p>No cart data yet. Click "Test Cart API" after logging in.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Self-contained cart debugging - no external dependencies
+const debugLog = document.getElementById('debug-log');
+
+function log(message) {
+    const timestamp = new Date().toLocaleTimeString();
+    debugLog.textContent += `[${timestamp}] ${message}\n`;
+    debugLog.scrollTop = debugLog.scrollHeight;
+    console.log(message);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    log('Cart debug test page loaded');
+    
+    const API_BASE_URL = window.location.origin + '/api';
+    log(`API_BASE_URL: ${API_BASE_URL}`);
+    
+    // Manual login
+    document.getElementById('login-btn').addEventListener('click', async function() {
+        log('Starting manual login...');
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    email: 'admin@ecommerce.com', 
+                    password: 'Admin123!' 
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('jwt_token', data.token);
+                log('✅ Login successful! Token stored.');
+                log(`Token preview: ${data.token.substring(0, 50)}...`);
+            } else {
+                const error = await response.text();
+                log(`❌ Login failed: ${error}`);
+            }
+        } catch (error) {
+            log(`❌ Login error: ${error.message}`);
+        }
+    });
+    
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', function() {
+        localStorage.removeItem('jwt_token');
+        log('✅ Logged out - token removed');
+    });
+    
+    // Check token
+    document.getElementById('check-token-btn').addEventListener('click', function() {
+        const token = localStorage.getItem('jwt_token');
+        if (token) {
+            log(`✅ Token found: ${token.substring(0, 50)}...`);
+        } else {
+            log('❌ No token found in localStorage');
+        }
+    });
+    
+    // Test cart API
+    document.getElementById('test-cart-btn').addEventListener('click', async function() {
+        log('Starting cart API test...');
+        
+        const token = localStorage.getItem('jwt_token');
+        if (!token) {
+            log('❌ No token found - please login first');
+            return;
+        }
+        
+        try {
+            log('Making cart API call...');
+            const response = await fetch(`${API_BASE_URL}/shoppingcart`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            log(`Cart API response status: ${response.status}`);
+            
+            if (response.ok) {
+                const cartData = await response.json();
+                log('✅ Cart API call successful!');
+                log(`Cart data received: ${JSON.stringify(cartData, null, 2)}`);
+                
+                // Display cart in UI
+                displayCartData(cartData);
+            } else {
+                const error = await response.text();
+                log(`❌ Cart API failed: ${response.status} - ${error}`);
+            }
+        } catch (error) {
+            log(`❌ Cart API error: ${error.message}`);
+        }
+    });
+    
+    function displayCartData(cartData) {
+        const cartContent = document.getElementById('cart-content');
+        
+        if (!cartData || !cartData.items || cartData.items.length === 0) {
+            cartContent.innerHTML = '<p class="text-muted">Cart is empty</p>';
+            return;
+        }
+        
+        const itemsHtml = cartData.items.map(item => `
+            <div class="row mb-2 border-bottom pb-2">
+                <div class="col-6">
+                    <strong>${item.productName}</strong><br>
+                    <small class="text-muted">$${item.productPrice} each</small>
+                </div>
+                <div class="col-3">
+                    Qty: ${item.quantity}
+                </div>
+                <div class="col-3 text-end">
+                    <strong>$${item.totalPrice}</strong>
+                </div>
+            </div>
+        `).join('');
+        
+        cartContent.innerHTML = `
+            <h6>Cart Items (${cartData.totalItems} items):</h6>
+            ${itemsHtml}
+            <div class="row mt-3 pt-2 border-top">
+                <div class="col-6">
+                    <strong>Total Amount:</strong>
+                </div>
+                <div class="col-6 text-end">
+                    <strong class="text-success">$${cartData.totalAmount}</strong>
+                </div>
+            </div>
+        `;
+    }
+});
+</script>

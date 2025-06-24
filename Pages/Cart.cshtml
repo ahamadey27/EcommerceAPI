@@ -1,5 +1,4 @@
 @page
-@model CartModel
 @{
     ViewData["Title"] = "Shopping Cart";
 }
@@ -13,14 +12,14 @@
 
     <div id="alert-container"></div>
 
-    <div class="auth-guest">
+    <div class="auth-guest" style="display: none;">
         <div class="alert alert-info slide-up">
             <i class="fas fa-info-circle me-2"></i>
             <p class="mb-0">Please <a href="/Login" class="alert-link">login</a> to view your shopping cart.</p>
         </div>
     </div>
 
-    <div class="auth-user">
+    <div class="auth-user" style="display: none;">
         <div id="cart-container">
             <div class="text-center">
                 <div class="spinner-border text-primary" role="status">
@@ -36,30 +35,62 @@
     <script>
         let cart = null;
         
-        document.addEventListener('DOMContentLoaded', async function() {
-            showForAuth('.auth-user');
-            showForGuest('.auth-guest');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Cart page loaded');
             
-            if (isLoggedIn()) {
-                await loadCart();
+            // Simple check - if token exists, show cart, otherwise show login
+            const token = localStorage.getItem('jwt_token');
+            console.log('Token exists:', !!token);
+            
+            if (token) {
+                console.log('User has token, loading cart');
+                document.querySelector('.auth-user').style.display = 'block';
+                document.querySelector('.auth-guest').style.display = 'none';
+                loadCart();
+            } else {
+                console.log('No token, showing login message');
+                document.querySelector('.auth-guest').style.display = 'block';
+                document.querySelector('.auth-user').style.display = 'none';
             }
         });
         
         async function loadCart() {
             try {
-                cart = await API.getCart();
-                displayCart();            } catch (error) {
+                console.log('Loading cart data...');
+                const token = localStorage.getItem('jwt_token');
+                
+                const response = await fetch('/api/shoppingcart', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    cart = await response.json();
+                    console.log('Cart loaded:', cart);
+                    displayCart();
+                } else {
+                    throw new Error(`Cart load failed: ${response.status}`);
+                }
+            } catch (error) {
                 console.error('Error loading cart:', error);
                 document.getElementById('cart-container').innerHTML = `
-                    <div class="alert alert-warning">
-                        <p>Error loading cart. Please try again.</p>
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle me-2"></i>Error Loading Cart</h5>
+                        <p>Error: ${error.message}</p>
+                        <p>Please try refreshing the page or <a href="/Login">login again</a>.</p>
                     </div>
                 `;
             }
-        }          function displayCart() {
+        }
+        
+        function displayCart() {
+            console.log('Displaying cart:', cart);
             const container = document.getElementById('cart-container');
             
-            if (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0) {
+            if (!cart || !cart.items || cart.items.length === 0) {
+                console.log('Cart is empty');
                 container.innerHTML = `
                     <div class="text-center py-5 fade-in">
                         <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
@@ -73,8 +104,10 @@
                 return;
             }
             
+            console.log('Cart has items, rendering...', cart.items.length, 'items');
+            
             const cartItems = cart.items.map(item => `
-                <div class="cart-item slide-up">
+                <div class="cart-item slide-up mb-3 p-3 border rounded">
                     <div class="row align-items-center">
                         <div class="col-md-6">
                             <div class="d-flex align-items-center">
@@ -83,7 +116,7 @@
                                 </div>
                                 <div>
                                     <h5 class="mb-1">${item.productName}</h5>
-                                    <p class="text-muted mb-0">${formatPrice(item.productPrice)} each</p>
+                                    <p class="text-muted mb-0">$${item.productPrice} each</p>
                                 </div>
                             </div>
                         </div>
@@ -102,7 +135,7 @@
                             </div>
                         </div>
                         <div class="col-md-2 text-center">
-                            <span class="h5 text-success mb-0">${formatPrice(item.productPrice * item.quantity)}</span>
+                            <span class="h5 text-success mb-0">$${item.totalPrice}</span>
                         </div>
                         <div class="col-md-1 text-center">
                             <button class="btn btn-outline-danger btn-sm" onclick="removeFromCart(${item.productId})" 
@@ -114,28 +147,25 @@
                 </div>
             `).join('');
             
-            const total = cart.items.reduce((sum, item) => sum + (item.productPrice * item.quantity), 0);
-            const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-            
             container.innerHTML = `
                 <div class="row">
                     <div class="col-lg-8">
                         <div class="cart-items-container">
                             <h4 class="mb-4">
                                 <i class="fas fa-shopping-cart me-2"></i>
-                                Cart Items (${itemCount} ${itemCount === 1 ? 'item' : 'items'})
+                                Cart Items (${cart.totalItems} ${cart.totalItems === 1 ? 'item' : 'items'})
                             </h4>
                             ${cartItems}
                         </div>
                     </div>
                     <div class="col-lg-4">
-                        <div class="cart-summary">
+                        <div class="cart-summary p-4 border rounded">
                             <h4 class="mb-4">
                                 <i class="fas fa-receipt me-2"></i>Order Summary
                             </h4>
                             <div class="d-flex justify-content-between mb-3">
-                                <span>Subtotal (${itemCount} items):</span>
-                                <span>${formatPrice(total)}</span>
+                                <span>Subtotal (${cart.totalItems} items):</span>
+                                <span>$${cart.totalAmount}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-3">
                                 <span>Shipping:</span>
@@ -144,7 +174,7 @@
                             <hr>
                             <div class="d-flex justify-content-between mb-4">
                                 <strong>Total:</strong>
-                                <strong class="h4 text-success">${formatPrice(total)}</strong>
+                                <strong class="h4 text-success">$${cart.totalAmount}</strong>
                             </div>
                             <button class="btn btn-success btn-lg w-100 mb-3" onclick="proceedToCheckout()">
                                 <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
@@ -152,16 +182,6 @@
                             <button class="btn btn-outline-primary w-100" onclick="window.location.href='/Products'">
                                 <i class="fas fa-arrow-left me-2"></i>Continue Shopping
                             </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-12 text-end">
-                                <a href="/Products" class="btn btn-outline-primary">Continue Shopping</a>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -175,10 +195,22 @@
             }
             
             try {
-                await API.updateCartItem(productId, newQuantity);
-                await loadCart();
-                updateCartCount();
-                showAlert('Cart updated!', 'success');
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch(`/api/shoppingcart/items/${productId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ quantity: newQuantity })
+                });
+                
+                if (response.ok) {
+                    await loadCart();
+                    showAlert('Cart updated!', 'success');
+                } else {
+                    throw new Error('Update failed');
+                }
             } catch (error) {
                 console.error('Error updating cart:', error);
                 showAlert('Error updating cart', 'danger');
@@ -187,57 +219,29 @@
         
         async function removeFromCart(productId) {
             try {
-                await API.removeFromCart(productId);
-                await loadCart();
-                updateCartCount();
-                showAlert('Item removed from cart!', 'success');
-            } catch (error) {
-                console.error('Error removing item:', error);
-                showAlert('Error removing item from cart', 'danger');
-            }
-        }        async function proceedToCheckout() {
-            try {
-                console.log('Starting simplified checkout process...');
-                
-                // Get cart total and item count for confirmation
-                const totalAmount = cart.items.reduce((sum, item) => sum + (item.productPrice * item.quantity), 0);
-                const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-                
-                // Show confirmation dialog
-                const confirmed = confirm(`Proceed with checkout?\n\nTotal Items: ${totalItems}\nTotal Amount: $${totalAmount.toFixed(2)}\n\nNote: This is a demo - no actual payment will be processed.`);
-                
-                if (!confirmed) {
-                    return;
-                }
-                
-                // Simulate order processing
-                showAlert('Processing order...', 'info');
-                
-                // Clear the cart after a short delay to simulate processing
-                setTimeout(async () => {
-                    try {
-                        // Clear cart items (you could also call an API to create an order record)
-                        for (const item of cart.items) {
-                            await API.removeFromCart(item.productId);
-                        }
-                        
-                        // Show success message
-                        showAlert(`Order completed successfully! Total: $${totalAmount.toFixed(2)}. Thank you for your purchase!`, 'success');
-                        
-                        // Reload cart to show it's empty
-                        await loadCart();
-                        updateCartCount();
-                        
-                    } catch (error) {
-                        console.error('Error processing order:', error);
-                        showAlert('Error processing order. Please try again.', 'danger');
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch(`/api/shoppingcart/items/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
-                }, 1500);
+                });
                 
+                if (response.ok) {
+                    await loadCart();
+                    showAlert('Item removed from cart!', 'success');
+                } else {
+                    throw new Error('Remove failed');
+                }
             } catch (error) {
-                console.error('Error during checkout:', error);
-                showAlert('Error starting checkout. Please try again.', 'danger');
+                console.error('Error removing from cart:', error);
+                showAlert('Error removing item', 'danger');
             }
+        }
+        
+        function proceedToCheckout() {
+            showAlert('Checkout functionality coming soon!', 'info');
         }
         
         function showAlert(message, type) {
@@ -248,17 +252,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
-            
-            // Auto-dismiss success alerts
-            if (type === 'success') {
-                setTimeout(() => {
-                    const alert = alertContainer.querySelector('.alert');
-                    if (alert) {
-                        const bsAlert = new bootstrap.Alert(alert);
-                        bsAlert.close();
-                    }
-                }, 3000);
-            }
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 3000);
         }
     </script>
 }

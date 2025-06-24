@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>Login Debug Test</h1>
+    <div id="debug-output"></div>
+    
+    <div class="debug">
+        <h3>Manual Test Form</h3>
+        <input type="email" id="test-email" placeholder="Email" value="admin@ecommerce.com"><br><br>
+        <input type="password" id="test-password" placeholder="Password" value="Admin123!"><br><br>
+        <button onclick="manualTest()">Test Login</button>
+    </div>
+    
+    <!-- Load scripts in the same order as the main layout -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/auth.js"></script>
+    <script src="/site.js"></script>
+    
+    <script>
+        function log(message, type = 'info') {
+            const debugOutput = document.getElementById('debug-output');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
+            debugOutput.innerHTML += `<p class="${className}">[${new Date().toLocaleTimeString()}] ${message}</p>`;
+            console.log(message);
+        }
+        
+        async function testLogin() {
+            log('=== Starting Login Debug Test ===');
+            
+            // Check if variables and functions exist
+            log(`API_BASE_URL: ${typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'UNDEFINED'}`, 
+                typeof API_BASE_URL !== 'undefined' ? 'success' : 'error');
+            
+            log(`login function: ${typeof login}`, 
+                typeof login === 'function' ? 'success' : 'error');
+            
+            log(`window.showAlert function: ${typeof window.showAlert}`, 
+                typeof window.showAlert === 'function' ? 'success' : 'error');
+            
+            // Test if we can reach the API endpoint directly
+            try {
+                log('Testing API endpoint directly...');
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'admin@ecommerce.com', password: 'Admin123!' })
+                });
+                
+                log(`Direct API test - Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Direct API test - Got token: ${data.token ? 'YES' : 'NO'}`, data.token ? 'success' : 'error');
+                }
+            } catch (error) {
+                log(`Direct API test - Error: ${error.message}`, 'error');
+            }
+            
+            // Test using the login function
+            if (typeof login === 'function') {
+                try {
+                    log('Testing login function...');
+                    const result = await login('admin@ecommerce.com', 'Admin123!');
+                    log(`Login function result: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+                } catch (error) {
+                    log(`Login function error: ${error.message}`, 'error');
+                }
+            } else {
+                log('Cannot test login function - it is not defined', 'error');
+            }
+        }
+        
+        async function manualTest() {
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            
+            log(`=== Manual Test: ${email} ===`);
+            
+            if (typeof login === 'function') {
+                try {
+                    const result = await login(email, password);
+                    log(`Manual test result: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+                } catch (error) {
+                    log(`Manual test error: ${error.message}`, 'error');
+                }
+            } else {
+                log('Cannot perform manual test - login function not available', 'error');
+            }
+        }
+        
+        // Test when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            log('DOM Content Loaded');
+            setTimeout(testLogin, 100); // Small delay to ensure scripts are loaded
+        });
+    </script>
+</body>
+</html>

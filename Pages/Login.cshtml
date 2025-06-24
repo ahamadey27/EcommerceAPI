@@ -12,9 +12,14 @@
                     <h3 class="card-title mb-0">
                         <i class="fas fa-sign-in-alt me-2"></i>Login
                     </h3>
-                </div>
-                <div class="card-body p-4">
+                </div>                <div class="card-body p-4">
                     <div id="alert-container"></div>
+                    
+                    <!-- Debug information panel -->
+                    <div id="debug-info" class="alert alert-info" style="font-family: monospace; font-size: 12px; max-height: 150px; overflow-y: auto;">
+                        <strong>Debug Info:</strong><br>
+                        <div id="debug-content">Loading debug information...</div>
+                    </div>
                     
                     <form id="login-form">
                         <div class="mb-3">
@@ -49,43 +54,90 @@
 </div>
 
 @section Scripts {
+    <!-- Debug script for troubleshooting -->
+    <script src="~/login-debug.js" asp-append-version="true"></script>
+    
     <script>
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Wait for all scripts to load before setting up the login form
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded');
             
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const btn = document.getElementById('login-btn');
-            const spinner = btn.querySelector('.spinner-border');
-            const alertContainer = document.getElementById('alert-container');
-            
-            // Clear previous alerts
-            alertContainer.innerHTML = '';
-            
-            // Show loading
-            btn.disabled = true;
-            spinner.classList.remove('d-none');
-            
-            try {
-                console.log('Attempting login for:', email);
-                const result = await login(email, password);
-                console.log('Login result:', result);
-                
-                if (result.success) {
-                    window.showAlert('Login successful! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/Products';
-                    }, 1500);
-                } else {
-                    window.showAlert(result.error || 'Login failed', 'danger');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                window.showAlert('Login failed. Please try again.', 'danger');
-            } finally {
-                btn.disabled = false;
-                spinner.classList.add('d-none');
+            // Function to wait for required functions to be available
+            function waitForDependencies() {
+                return new Promise((resolve) => {
+                    const checkInterval = setInterval(() => {
+                        if (typeof login === 'function' && typeof API_BASE_URL !== 'undefined') {
+                            clearInterval(checkInterval);
+                            console.log('Dependencies loaded - API_BASE_URL:', API_BASE_URL);
+                            console.log('login function available:', typeof login);
+                            resolve();
+                        } else {
+                            console.log('Waiting for dependencies... login:', typeof login, 'API_BASE_URL:', typeof API_BASE_URL);
+                        }
+                    }, 100);
+                });
             }
+            
+            // Initialize the login form once dependencies are ready
+            waitForDependencies().then(() => {
+                console.log('Setting up login form event listener');
+                
+                const loginForm = document.getElementById('login-form');
+                if (!loginForm) {
+                    console.error('Login form not found');
+                    return;
+                }
+                
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    console.log('Login form submitted');
+                    
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    console.log('Login attempt - Email:', email, 'Password length:', password.length);
+                    
+                    const btn = document.getElementById('login-btn');
+                    const spinner = btn.querySelector('.spinner-border');
+                    const alertContainer = document.getElementById('alert-container');
+                    
+                    // Clear previous alerts
+                    alertContainer.innerHTML = '';
+                    
+                    // Show loading state
+                    btn.disabled = true;
+                    spinner.classList.remove('d-none');
+                    console.log('Loading state activated');
+                    
+                    try {
+                        console.log('Calling login function...');
+                        const result = await login(email, password);
+                        console.log('Login result received:', result);
+                        
+                        if (result && result.success) {
+                            console.log('Login successful, redirecting...');
+                            alertContainer.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Login successful! Redirecting...</div>';
+                            setTimeout(() => {
+                                console.log('Redirecting to /Products');
+                                window.location.href = '/Products';
+                            }, 1500);
+                        } else {
+                            const errorMsg = result?.error || 'Login failed';
+                            console.log('Login failed:', errorMsg);
+                            alertContainer.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>${errorMsg}</div>`;
+                        }
+                    } catch (error) {
+                        console.error('Login error caught:', error);
+                        alertContainer.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Login failed. Please try again.</div>';
+                    } finally {
+                        // Reset loading state
+                        btn.disabled = false;
+                        spinner.classList.add('d-none');
+                        console.log('Loading state cleared');
+                    }
+                });
+                
+                console.log('Login form event listener attached successfully');
+            });
         });
     </script>
 }

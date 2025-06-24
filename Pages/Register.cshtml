@@ -76,55 +76,102 @@
 </div>
 
 @section Scripts {
-    <script>        document.getElementById('register-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+    <script>
+        // Wait for all scripts to load before setting up the register form
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Register page DOM Content Loaded');
             
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const btn = document.getElementById('register-btn');
-            const spinner = btn.querySelector('.spinner-border');
-            const alertContainer = document.getElementById('alert-container');
-            
-            // Clear previous alerts
-            alertContainer.innerHTML = '';
-              // Validation
-            if (password !== confirmPassword) {
-                window.showAlert('Passwords do not match', 'danger');
-                return;
+            // Function to wait for required functions to be available
+            function waitForDependencies() {
+                return new Promise((resolve) => {
+                    const checkInterval = setInterval(() => {
+                        if (typeof register === 'function' && typeof API_BASE_URL !== 'undefined') {
+                            clearInterval(checkInterval);
+                            console.log('Register dependencies loaded - API_BASE_URL:', API_BASE_URL);
+                            console.log('register function available:', typeof register);
+                            resolve();
+                        } else {
+                            console.log('Waiting for register dependencies... register:', typeof register, 'API_BASE_URL:', typeof API_BASE_URL);
+                        }
+                    }, 100);
+                });
             }
             
-            if (password.length < 6) {
-                window.showAlert('Password must be at least 6 characters long', 'danger');
-                return;
-            }
-            
-            // Show loading
-            btn.disabled = true;
-            spinner.classList.remove('d-none');
-            
-            try {
-                console.log('Attempting registration for:', email);
-                const result = await register(firstName, lastName, email, password, confirmPassword);
-                console.log('Registration result:', result);
+            // Initialize the register form once dependencies are ready
+            waitForDependencies().then(() => {
+                console.log('Setting up register form event listener');
                 
-                if (result.success) {
-                    window.showAlert('Registration successful! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/Products';
-                    }, 1500);
-                } else {
-                    window.showAlert(result.error || 'Registration failed', 'danger');
+                const registerForm = document.getElementById('register-form');
+                if (!registerForm) {
+                    console.error('Register form not found');
+                    return;
                 }
-            } catch (error) {
-                console.error('Registration error:', error);
-                window.showAlert('Registration failed. Please try again.', 'danger');
-            } finally {
-                btn.disabled = false;
-                spinner.classList.add('d-none');
-            }
+                
+                registerForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    console.log('Register form submitted');
+                    
+                    const firstName = document.getElementById('firstName').value;
+                    const lastName = document.getElementById('lastName').value;
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+                    
+                    console.log('Registration attempt - Email:', email, 'Name:', firstName, lastName);
+                    
+                    const btn = document.getElementById('register-btn');
+                    const spinner = btn.querySelector('.spinner-border');
+                    const alertContainer = document.getElementById('alert-container');
+                    
+                    // Clear previous alerts
+                    alertContainer.innerHTML = '';
+                    
+                    // Validation
+                    if (password !== confirmPassword) {
+                        alertContainer.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Passwords do not match</div>';
+                        return;
+                    }
+                    
+                    if (password.length < 6) {
+                        alertContainer.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Password must be at least 6 characters long</div>';
+                        return;
+                    }
+                    
+                    // Show loading state
+                    btn.disabled = true;
+                    spinner.classList.remove('d-none');
+                    console.log('Registration loading state activated');
+                    
+                    try {
+                        console.log('Calling register function...');
+                        const result = await register(firstName, lastName, email, password, confirmPassword);
+                        console.log('Registration result received:', result);
+                        
+                        if (result && result.success) {
+                            console.log('Registration successful, redirecting...');
+                            alertContainer.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Registration successful! Redirecting...</div>';
+                            setTimeout(() => {
+                                console.log('Redirecting to /Products');
+                                window.location.href = '/Products';
+                            }, 1500);
+                        } else {
+                            const errorMsg = result?.error || 'Registration failed';
+                            console.log('Registration failed:', errorMsg);
+                            alertContainer.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>${errorMsg}</div>`;
+                        }
+                    } catch (error) {
+                        console.error('Registration error caught:', error);
+                        alertContainer.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Registration failed. Please try again.</div>';
+                    } finally {
+                        // Reset loading state
+                        btn.disabled = false;
+                        spinner.classList.add('d-none');
+                        console.log('Registration loading state cleared');
+                    }
+                });
+                
+                console.log('Register form event listener attached successfully');
+            });
         });
     </script>
 }

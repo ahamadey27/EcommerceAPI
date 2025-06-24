@@ -1,0 +1,83 @@
+@page
+@model CartModel
+@{
+    ViewData["Title"] = "Cart Test";
+}
+
+<div class="container">
+    <h2>Cart Test Page</h2>
+    <div id="debug-log" style="background: #f8f9fa; padding: 15px; margin: 15px 0; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd;"></div>
+    <div id="cart-status" class="alert alert-info">Initializing...</div>
+    <div id="cart-content"></div>
+</div>
+
+<script>
+const debugLog = document.getElementById('debug-log');
+const cartStatus = document.getElementById('cart-status');
+const cartContent = document.getElementById('cart-content');
+
+function log(message) {
+    const timestamp = new Date().toLocaleTimeString();
+    debugLog.innerHTML += `[${timestamp}] ${message}<br>`;
+    debugLog.scrollTop = debugLog.scrollHeight;
+    console.log(message);
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    log('=== Cart Test Started ===');
+    
+    // Check localStorage
+    const token = localStorage.getItem('jwt_token');
+    log(`Token in localStorage: ${token ? 'Present (' + token.substring(0, 30) + '...)' : 'Not found'}`);
+    
+    // Test API directly
+    try {
+        const API_BASE_URL = window.location.origin + '/api';
+        log(`API_BASE_URL: ${API_BASE_URL}`);
+        
+        log('Testing cart API directly...');
+        const response = await fetch(`${API_BASE_URL}/shoppingcart`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        log(`Cart API response status: ${response.status}`);
+        
+        if (response.ok) {
+            const cartData = await response.json();
+            log(`Cart API response: ${JSON.stringify(cartData, null, 2)}`);
+            
+            cartStatus.className = 'alert alert-success';
+            cartStatus.textContent = `Cart loaded successfully! Found ${cartData.items?.length || 0} items`;
+            
+            if (cartData.items && cartData.items.length > 0) {
+                cartContent.innerHTML = '<h4>Cart Items:</h4>' + 
+                    cartData.items.map(item => `
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h6>${item.productName || 'Unknown Product'}</h6>
+                                <p>Price: $${item.productPrice || 0} | Quantity: ${item.quantity || 0}</p>
+                            </div>
+                        </div>
+                    `).join('');
+            } else {
+                cartContent.innerHTML = '<div class="alert alert-info">Your cart is empty</div>';
+            }
+        } else {
+            const errorText = await response.text();
+            log(`Cart API error: ${errorText}`);
+            cartStatus.className = 'alert alert-danger';
+            cartStatus.textContent = `Cart API failed: ${response.status} - ${errorText}`;
+        }
+    } catch (error) {
+        log(`Cart API exception: ${error.message}`);
+        cartStatus.className = 'alert alert-danger';
+        cartStatus.textContent = `Cart API exception: ${error.message}`;
+    }
+    
+    log('=== Cart Test Complete ===');
+});
+</script>
