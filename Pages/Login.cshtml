@@ -15,7 +15,7 @@
                 </div>
                 <div class="card-body p-4">
                     <div id="alert-container"></div>
-                    
+                    <div id="debug-panel" style="font-size:12px; background:#f8f9fa; border:1px solid #ccc; padding:8px; margin-bottom:10px; display:none;"></div>
                     <form id="login-form">
                         <div class="mb-3">
                             <label for="email" class="form-label">
@@ -49,5 +49,59 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/login.js" asp-append-version="true"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loginForm = document.getElementById('login-form');
+        const alertContainer = document.getElementById('alert-container');
+        const debugPanel = document.getElementById('debug-panel');
+        let apiBase = window.location.origin + '/api/auth/login';
+        function showDebug(msg) {
+            if (debugPanel) {
+                debugPanel.style.display = 'block';
+                debugPanel.innerHTML += `<div>${new Date().toLocaleTimeString()} - ${msg}</div>`;
+            }
+            console.log(msg);
+        }
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const btn = document.getElementById('login-btn');
+                const spinner = btn.querySelector('.spinner-border');
+                spinner.classList.remove('d-none');
+                btn.disabled = true;
+                if (alertContainer) alertContainer.innerHTML = '';
+                showDebug(`POST ${apiBase} with email=${email}`);
+                try {
+                    const response = await fetch(apiBase, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    let result;
+                    try { result = await response.json(); } catch { result = {}; }
+                    showDebug('API response: ' + JSON.stringify(result));
+                    if (response.ok && result.token) {
+                        localStorage.setItem('jwt_token', result.token);
+                        alertContainer.innerHTML = '<div class="alert alert-success">Login successful! Redirecting...</div>';
+                        showDebug('Login success, token stored.');
+                        setTimeout(() => { window.location.href = '/'; }, 1000);
+                    } else {
+                        let errorMsg = result.error || result.title || 'Login failed. Please check your credentials.';
+                        if (result.errors) errorMsg += '<br>' + Object.values(result.errors).flat().join('<br>');
+                        alertContainer.innerHTML = `<div class="alert alert-danger">${errorMsg}</div>`;
+                        showDebug('Login failed: ' + errorMsg);
+                    }
+                } catch (error) {
+                    alertContainer.innerHTML = `<div class="alert alert-danger">Unexpected error: ${error.message}</div>`;
+                    showDebug('JS error: ' + error.message);
+                } finally {
+                    spinner.classList.add('d-none');
+                    btn.disabled = false;
+                }
+            });
+        }
+    });
+    </script>
 }

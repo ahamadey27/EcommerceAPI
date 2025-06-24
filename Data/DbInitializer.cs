@@ -18,6 +18,9 @@ public static class DbInitializer
         
         // Seed Default Admin User
         await SeedDefaultAdminAsync(userManager);
+        
+        // Seed Default Test User
+        await SeedDefaultTestUserAsync(userManager);
     }
 
     /// <summary>
@@ -75,6 +78,40 @@ public static class DbInitializer
             if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Creates a default test user for testing
+    /// </summary>
+    private static async Task SeedDefaultTestUserAsync(UserManager<ApplicationUser> userManager)
+    {
+        const string testEmail = "test@example.com";
+        const string testPassword = "Test123!";
+
+        var testUser = await userManager.FindByEmailAsync(testEmail);
+        if (testUser == null)
+        {
+            testUser = new ApplicationUser
+            {
+                UserName = testEmail,
+                Email = testEmail,
+                FirstName = "Test",
+                LastName = "User",
+                EmailConfirmed = true
+            };
+            var result = await userManager.CreateAsync(testUser, testPassword);
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(testUser, "User");
+            }
+        }
+        else
+        {
+            if (!await userManager.IsInRoleAsync(testUser, "User"))
+            {
+                await userManager.AddToRoleAsync(testUser, "User");
             }
         }
     }
