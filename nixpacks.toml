@@ -1,0 +1,18 @@
+[variables]
+DOTNET_ROOT = "/nix/store"
+
+[phases.setup]
+nixPkgs = ["dotnet-sdk_8"]
+
+[phases.build]
+cmds = [
+    "dotnet restore",
+    "dotnet build -c Release --no-restore",
+    "dotnet publish -c Release -o out --no-restore"
+]
+
+[phases.start]
+cmd = "dotnet out/EcommerceAPI.dll"
+
+[staticAssets]
+dir = "wwwroot"

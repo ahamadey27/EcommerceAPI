@@ -1,22 +1,25 @@
-# Use the official .NET runtime as a parent image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 8080
-
-# Use the SDK image to build the application
+# Use the official .NET SDK for building
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-COPY ["EcommerceAPI.csproj", "."]
-RUN dotnet restore "EcommerceAPI.csproj"
-COPY . .
-WORKDIR "/src"
-RUN dotnet build "EcommerceAPI.csproj" -c Release -o /app/build
+WORKDIR /source
 
-FROM build AS publish
-RUN dotnet publish "EcommerceAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+# Copy project file and restore dependencies
+COPY *.csproj .
+RUN dotnet restore
+
+# Copy everything else and build
+COPY . .
+RUN dotnet publish -c Release -o /app --no-restore
 
 # Build runtime image
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app .
+
+# Expose port
+EXPOSE 8080
+
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
 ENTRYPOINT ["dotnet", "EcommerceAPI.dll"]
