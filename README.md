@@ -25,6 +25,8 @@ EcommerceAPI is a full-stack e-commerce web application built with ASP.NET Core.
 
 ## Admin Login Info
 To access admin features, use the following credentials:
+- User : admin@ecommerce.com
+- Password : Admin123! 
 
 - **Email:** admin@ecommerce.com
 - **Password:** Admin123!
