@@ -4,73 +4,33 @@
     ViewData["Title"] = "Products";
 }
 
-<div class="hero-section">
-    <div class="container">
-        <h1 class="hero-title">Our Products</h1>
-        <p class="hero-subtitle">Discover amazing products at unbeatable prices</p>
-    </div>
+<h1>Our Products</h1>
+<p>Discover amazing products at unbeatable prices.</p>
+
+<div class="auth-admin">
+    <button id="add-product-btn">Add Product</button>
 </div>
 
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fade-in"><i class="fas fa-box me-2"></i>Browse Products</h2>
-        <div class="auth-admin">
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                <i class="fas fa-plus me-2"></i>Add Product
-            </button>
-        </div>
-    </div>
-
-    <div id="alert-container"></div>
-
-    <div class="product-grid" id="products-container">
-        <div class="col-12 text-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-3">Loading products...</p>
-        </div>
-    </div>
+<div id="alert-container"></div>
+<div id="products-container">
+    <p>Loading products...</p>
 </div>
 
 <!-- Add Product Modal (Admin only) -->
-<div class="modal fade" id="addProductModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="add-product-form">
-                    <div class="mb-3">
-                        <label for="productName" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="productName" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="productDescription" rows="3" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productPrice" class="form-label">Price</label>
-                        <input type="number" class="form-control" id="productPrice" step="0.01" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productCategory" class="form-label">Category</label>
-                        <input type="text" class="form-control" id="productCategory" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productStock" class="form-label">Stock Quantity</label>
-                        <input type="number" class="form-control" id="productStock" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save-product-btn">Save Product</button>
-            </div>
-        </div>
-    </div>
+<div id="addProductModal" style="display:none;">
+    <h2>Add New Product</h2>
+    <form id="add-product-form">
+        <label for="productName">Name</label><br>
+        <input type="text" id="productName" required><br>
+        <label for="productDescription">Description</label><br>
+        <textarea id="productDescription" rows="3" required></textarea><br>
+        <label for="productPrice">Price</label><br>
+        <input type="number" id="productPrice" step="0.01" required><br>
+        <label for="productCategory">Category</label><br>
+        <input type="text" id="productCategory" required><br>
+        <button type="submit">Add</button>
+    </form>
+    <button id="close-modal">Close</button>
 </div>
 
 @section Scripts {

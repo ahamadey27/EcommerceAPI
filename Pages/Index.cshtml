@@ -4,62 +4,31 @@
     ViewData["Title"] = "Home";
 }
 
-<!-- Hero Section -->
-<div class="hero-section">
-    <div class="container">
-        <h1 class="display-4 fw-bold">Welcome to Our Store!</h1>
-        <p class="lead mb-4">Discover amazing products at unbeatable prices</p>
-        <a href="/Products" class="btn btn-light btn-lg">Start Shopping</a>
-    </div>
-</div>
+<h2>Welcome to Our Store!</h2>
+<p>Discover amazing products at unbeatable prices.</p>
+<p><a href="/Products">Start Shopping</a></p>
 
-<!-- Features Section -->
-<div class="container mt-5">
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-shopping-cart fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Browse Products</h5>
-                    <p class="card-text">Explore our extensive catalog of high-quality products</p>
-                    <a href="/Products" class="btn btn-primary">Shop Now</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-shopping-bag fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Your Cart</h5>
-                    <p class="card-text">Review and manage your selected items before checkout</p>
-                    <a href="/Cart" class="btn btn-outline-primary">View Cart</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-user fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Account</h5>
-                    <p class="card-text">Login or create an account to get started</p>
-                    <div class="auth-guest">
-                        <a href="/Login" class="btn btn-success me-2">Login</a>
-                        <a href="/Register" class="btn btn-outline-success">Register</a>
-                    </div>
-                    <div class="auth-user">
-                        <p class="text-success">Welcome back!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<hr />
+
+<h3>Features</h3>
+<ul>
+    <li>
+        Browse Products: <a href="/Products">Shop Now</a>
+    </li>
+    <li>
+        Your Cart: <a href="/Cart">View Cart</a>
+    </li>
+    <li>
+        Account:
+        <span class="auth-guest">
+            <a href="/Login">Login</a> |
+            <a href="/Register">Register</a>
+        </span>
+        <span class="auth-user">
+            Welcome back!
+        </span>
+    </li>
+</ul>
 
 @section Scripts {
     <script>
